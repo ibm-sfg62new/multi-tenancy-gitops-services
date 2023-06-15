@@ -15,7 +15,7 @@ global:
   image:
     repository: "image-registry.openshift-image-registry.svc:5000/b2bi-prod/b2bi"
   # Provide the tag value in double quotes
-    tag: "b2bi_june6"
+    tag: "b2bi-june15"
   # If digest is specified, it takes precedence over tag
     digest: sha256:3e60c61f4e38fa5be50c28db8887fcd86f6f243d6055b9730ab0b2a0c01a5ef3
     pullPolicy: IfNotPresent
@@ -151,12 +151,12 @@ ingress:
   port:
 
 dataSetup:
-  enabled: false
+  enabled: true
   upgrade: false
   image:
     repository: "image-registry.openshift-image-registry.svc:5000/b2bi-prod/b2bi-dbsetup"
     # Provide the tag value in double quotes
-    tag: "b2bi-dbsetup_june6"
+    tag: "b2bi-dbsetup-june15"
      # If digest is specified, it takes precedence over tag
     digest: sha256:6be066b14d4d6cdc752b691f3907c8673ea36e82ce8ebe721e41882dce331e93
     pullPolicy: IfNotPresent
@@ -250,7 +250,7 @@ integrations:
       claims:
         name: itxa-nfs-claim
     sso:
-      host: "i.itzroks-664003h6xc-io4qto-6ccd7f378ae819553d37d5f2ee142bd6-0000.us-south.containers.appdomain.cloud"
+      host: "i.itzroks-664003h6xc-j7zjr5-6ccd7f378ae819553d37d5f2ee142bd6-0000.us-south.containers.appdomain.cloud"
       port: 443
       ssl:
         enabled: true
@@ -261,7 +261,7 @@ setupCfg:
   #upgrade: false
   basePort: 50000
   #License - specify values as true/false
-  licenseAcceptEnableSfg: false
+  licenseAcceptEnableSfg: true
   licenseAcceptEnableEbics: false
   licenseAcceptEnableFinancialServices: false
   licenseAcceptEnableFileOperation: false
@@ -275,11 +275,11 @@ setupCfg:
 
   # Provide the DB attributes
   dbVendor: db2
-  dbHost: 172.21.26.3
+  dbHost: 172.21.124.123
   dbPort: 50000
   dbData: B2BIDB
   dbDrivers: db2jcc4.jar
-  dbCreateSchema: false
+  dbCreateSchema: true
   oracleUseServiceName: false
   # Values can be either true or false 
   usessl: false
@@ -510,7 +510,7 @@ asi:
     
   ingress:
     internal:
-      host: "asi-b2bi-prod.itzroks-664003h6xc-io4qto-6ccd7f378ae819553d37d5f2ee142bd6-0000.us-south.containers.appdomain.cloud"
+      host: "asi-b2bi-prod.itzroks-664003h6xc-j7zjr5-6ccd7f378ae819553d37d5f2ee142bd6-0000.us-south.containers.appdomain.cloud"
       tls:
         enabled: true
         secretName: ""
@@ -520,7 +520,7 @@ asi:
       #    servicePort: "my-http"
       #    enableHttps: false
     external:
-      host: "itzroks-664003h6xc-io4qto-6ccd7f378ae819553d37d5f2ee142bd6-0000.us-south.containers.appdomain.cloud"
+      host: "itzroks-664003h6xc-j7zjr5-6ccd7f378ae819553d37d5f2ee142bd6-0000.us-south.containers.appdomain.cloud"
       tls:
         enabled: true
         secretName: ""
@@ -785,7 +785,7 @@ ac:
       
   ingress:
     internal:
-      host: "ac-b2bi-prod.itzroks-664003h6xc-io4qto-6ccd7f378ae819553d37d5f2ee142bd6-0000.us-south.containers.appdomain.cloud"
+      host: "ac-b2bi-prod.itzroks-664003h6xc-j7zjr5-6ccd7f378ae819553d37d5f2ee142bd6-0000.us-south.containers.appdomain.cloud"
       tls:
         enabled: true
         secretName: ""
@@ -795,7 +795,7 @@ ac:
       #    servicePort: "my-http"
       #    enableHttps: false
     external:
-      host: "itzroks-664003h6xc-io4qto-6ccd7f378ae819553d37d5f2ee142bd6-0000.us-south.containers.appdomain.cloud"
+      host: "itzroks-664003h6xc-j7zjr5-6ccd7f378ae819553d37d5f2ee142bd6-0000.us-south.containers.appdomain.cloud"
       tls:
         enabled: true
         secretName: ""
@@ -1031,7 +1031,7 @@ api:
 
   ingress:
     internal:
-      host: "api-b2bi-prod.itzroks-664003h6xc-io4qto-6ccd7f378ae819553d37d5f2ee142bd6-0000.us-south.containers.appdomain.cloud"
+      host: "api-b2bi-prod.itzroks-664003h6xc-j7zjr5-6ccd7f378ae819553d37d5f2ee142bd6-0000.us-south.containers.appdomain.cloud"
       tls:
         enabled: true
         secretName: ""
