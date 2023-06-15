@@ -1,0 +1,25 @@
+# (C) Copyright 2021 Syncsort Incorporated. All rights reserved.
+
+{{- include "sch.config.init" (list . "documentSvc.sch.chart.config.values") -}}
+{{- $compName :=  .sch.chart.components.appInstance.name }}
+apiVersion: v1
+kind: Service
+metadata:
+  annotations: 
+    prometheus.io/scrape: 'true'
+    {{- if and (.Capabilities.APIVersions.Has "security.openshift.io/v1") (.Values.application.server.ssl.enabled | default true) (not .Values.application.server.ssl.tlsSecretName) }}
+    service.beta.openshift.io/serving-cert-secret-name: {{ include "sch.names.fullCompName" (list . $compName) }}
+    {{- end }}
+  name: {{ include "sch.names.fullCompName" (list . $compName) }}
+  labels:
+{{ include "sch.metadata.labels.standard" (list . $compName) | indent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.externalPort }}
+      targetPort: {{ .Values.application.server.port }}
+      protocol: TCP
+      name: {{ (.Values.application.server.ssl.enabled | default true) | ternary "https" "http" }}
+  selector:
+{{ include "sch.metadata.labels.standard" (list . $compName) | indent 4 }}
+    

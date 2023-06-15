@@ -1,0 +1,111 @@
+# (C) Copyright 2021 Syncsort Incorporated. All rights reserved.
+
+{{- if .Values.ingress.enabled -}}
+{{- include "sch.config.init" (list . "documentSvc.sch.chart.config.values") -}}
+{{- $compName :=  .sch.chart.components.appInstance.name -}}
+{{- $serviceName := include "sch.names.fullCompName" (list . $compName) -}}
+{{- $servicePort := .Values.service.externalPort -}}
+{{- $ingressTlsEnabled := .Values.ingress.tls.enabled | default true}}
+
+{{- if (.Capabilities.APIVersions.Has "route.openshift.io/v1") }}
+
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: {{ include "sch.names.fullCompName" (list . .sch.chart.components.appInstance.name) | quote }}
+  annotations:
+    haproxy.router.openshift.io/balance: source
+    haproxy.router.openshift.io/timeout: 30s
+    {{- with .Values.ingress.annotations }}
+    {{ toYaml . | indent 4 }}
+    {{- end }}
+  labels:
+{{ include "sch.metadata.labels.standard" (list . .sch.chart.components.appInstance.name) | indent 4 }}
+    route: "internal"
+    {{- with .Values.ingress.labels }}
+    {{ toYaml . | indent 4 }}
+    {{- end }}
+spec:
+  host: {{ .Values.ingress.host | quote }}  
+  {{- if ne (lower (.Values.ingress.tls.termination | default "passthrough")) "passthrough" }}
+  path: /
+  {{- end }}
+  to:
+    kind: Service
+    name: {{ include "sch.names.fullCompName" (list $ $.sch.chart.components.appInstance.name) | quote }}
+    weight: 100
+  port:
+    {{- if (.Values.application.server.ssl.enabled | default true) }}
+    targetPort: "https"
+    {{- else }}
+    targetPort: "http"
+    {{- end }}
+  {{- if $ingressTlsEnabled }}
+  tls:
+    {{- if (.Values.application.server.ssl.enabled | default true) }}
+    termination: {{ .Values.ingress.tls.termination | default "passthrough" }}
+    {{- else }}
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+    {{- end }}
+  {{- end }}
+  wildcardPolicy: None
+
+{{- else }}
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: {{ $serviceName }}
+  labels:
+    {{ include "sch.metadata.labels.standard" (list . $compName) | indent 4 }}
+    {{- with .Values.ingress.labels }}
+    {{ toYaml . | indent 4 }}
+    {{- end }}
+  annotations:
+    {{- if .Values.ingress.controller }}
+    kubernetes.io/ingress.class: {{ .Values.ingress.controller | quote }}
+    {{- end }}
+    {{- if eq .Values.ingress.controller "nginx" }}
+    {{- if $ingressTlsEnabled }}
+    nginx.ingress.kubernetes.io/secure-backends: "true"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    {{- else }}
+    nginx.ingress.kubernetes.io/secure-backends: "false"
+    nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    {{- end }}
+    nginx.ingress.kubernetes.io/affinity: "cookie"
+    nginx.ingress.kubernetes.io/session-cookie-name: "route"
+    nginx.ingress.kubernetes.io/session-cookie-hash: "sha1"
+    {{- end }}
+    {{- if $ingressTlsEnabled }}
+    ingress.kubernetes.io/secure-backends: "true"
+    ingress.kubernetes.io/backend-protocol: "HTTPS"
+    {{- else }}
+    ingress.kubernetes.io/secure-backends: "false"
+    ingress.kubernetes.io/backend-protocol: "HTTP"
+    {{- end }}
+    ingress.kubernetes.io/affinity: "cookie"
+    ingress.kubernetes.io/session-cookie-name: "route"
+    ingress.kubernetes.io/session-cookie-hash: "sha1"
+    {{- with .Values.ingress.annotations }}
+    {{ toYaml . | indent 4 }}
+    {{- end }}
+spec:
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: {{ $serviceName }}
+              servicePort: {{ $servicePort }}
+  {{- if $ingressTlsEnabled }}
+  tls:
+  - hosts:
+    - {{ .Values.ingress.host }}
+    secretName: {{ .Values.ingress.tls.secretName }}
+  {{- end -}}
+
+{{- end -}}
+{{- end -}}

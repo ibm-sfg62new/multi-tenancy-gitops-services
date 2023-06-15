@@ -1,0 +1,286 @@
+# (C) Copyright 2021 Syncsort Incorporated. All rights reserved.
+
+{{- include "sch.config.init" (list . "documentSvc.sch.chart.config.values") -}}
+{{- include "documentService.validateInput" . -}}
+{{- $compName :=  .sch.chart.components.appInstance.name }}
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: {{ include "sch.names.fullCompName" (list . $compName) | quote }}
+  labels:
+{{ include "sch.metadata.labels.standard" (list . $compName) | indent 4 }}
+spec:
+  selector:
+    matchLabels:
+      release: "{{ .Release.Name }}"
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+{{ include "sch.metadata.labels.standard" (list . $compName) | indent 8 }}
+      annotations:
+{{- include "sch.metadata.annotations.metering" (list . .sch.chart.document.metering .sch.chart.document.metering.productMetric nil nil) | indent 8 }}
+    spec:
+      {{- /* please look at _sch-chart-config.tpl for what is being injected here */ -}}
+{{- include "sch.security.securityContext" (list . .sch.chart.document.specSecurityContext) | indent 6 }}
+      affinity:
+      {{- /* please look at _sch-chart-config.tpl for what is being injected here */}}
+{{- include "sch.affinity.nodeAffinity" (list .) | indent 8 }}
+      serviceAccountName: {{ .Values.serviceAccount.name | default "default" }}
+      containers:
+        - name: document-service
+          {{- if .Values.image.digest }}
+          image: "{{ .Values.image.repository }}@{{ .Values.image.digest }}"
+          {{- else }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          {{- end }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+            {{- /* please look at _sch-chart-config.tpl for what is being injected here */ -}}
+{{- include "sch.security.securityContext" (list . .sch.chart.document.podSecurityContext) | indent 10 }}
+          ports:
+            - name: {{ (.Values.application.server.ssl.enabled | default true) | ternary "https" "http" }}
+              containerPort: {{ .Values.application.server.port }}
+              protocol: TCP
+          env:
+            - name: "JAVA_TOOL_OPTIONS"
+              value: "{{ .Values.application.jvmOptions }}"
+            - name: "TZ"
+              value: "{{ .Values.env.tz }}"
+            - name: "LOG_FILE_ROLLOVER_SIZE"
+              value: {{ .Values.application.logging.rolloverSize | default "10 MB" }}
+            - name: "NUMBER_OF_LOG_FILES"
+              value: {{ .Values.application.logging.numberOfFiles | default 20 | quote }}
+            - name: "LOG_FILE_PATH"
+              value: /app/logs
+            {{- if (.Values.application.server.ssl.enabled | default true) }}
+            - name: KEYSTORE_PASSWORD
+              value: password
+              #valueFrom:
+              #  secretKeyRef:
+              #    name: "{{ include "sch.names.fullCompName" (list . .sch.chart.components.appInstance.name) }}-store-creds"
+              #    key: "keystore-password"
+            - name: TRUSTSTORE_PASSWORD
+              {{- if (.Values.application.server.ssl.trustStoreSecretName) }}
+              #valueFrom:
+              #  secretKeyRef:
+              #    name: "{{ include "sch.names.fullCompName" (list . .sch.chart.components.appInstance.name) }}-store-creds"
+              #    key: "truststore-password"
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Values.application.server.ssl.trustStoreSecretName }}"
+                  key: "truststore-password"
+              {{- else }}
+              value: password
+              {{- end }}
+              
+            {{- end }}
+            {{- with .Values.env.extraEnvs }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          volumeMounts:
+            - name: app-config-volume
+              mountPath: /app/config
+            {{- if .Values.persistence.enabled }}
+            {{- if not .Values.logs.enableAppLogOnConsole }}
+            - name: {{ .sch.chart.components.appLogsPVC.name }}
+              mountPath: /app/logs
+            {{- end }}  
+            {{- range $i, $volumeMount := .Values.extraPVCs }}
+            - name: {{ $volumeMount.name }}
+              mountPath: {{ $volumeMount.mountPath }}
+            {{- end }}
+            {{- end }}
+            {{- if and (.Values.objectstore.useKeysFromSecrets) (.Values.objectstore.secretName) }}
+            - name: secret-{{ .Values.objectstore.secretName}}
+              mountPath: /app/secrets/objectstore
+              readOnly: true
+            {{- end }}
+            {{- if and ( .Values.objectstore.proxyCredentialRequired) (.Values.objectstore.proxyPasswordSecretName) }}
+            - name: secret-{{ .Values.objectstore.proxyPasswordSecretName }}
+              mountPath: /app/secrets/proxy
+              readOnly: true
+            {{- end }}
+            {{- if (.Values.application.server.ssl.enabled | default true) }}
+            - name: tls-cert-store
+              mountPath: /app/certstore
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /b2bi/api/v1/documentservice/alive
+              port: {{ .Values.application.server.port }}
+              scheme: {{ (.Values.application.server.ssl.enabled) | ternary "HTTPS" "HTTP" }}
+            initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+            timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+            periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+          readinessProbe:
+            httpGet:
+              path: /b2bi/api/v1/documentservice/
+              port: {{ .Values.application.server.port }}
+              scheme: {{ (.Values.application.server.ssl.enabled) | ternary "HTTPS" "HTTP" }}
+            initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+            timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+            periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+      volumes:
+        - name: app-config-volume
+          configMap:
+            name: {{ include "sch.names.fullCompName" (list . .sch.chart.components.configmap.name) | quote }}
+        {{- if not .Values.logs.enableAppLogOnConsole }}
+        - name: {{ .sch.chart.components.appLogsPVC.name }}
+          persistentVolumeClaim:
+            claimName: {{ include "sch.names.fullCompName" (list . .sch.chart.components.appLogsPVC.name) | quote }}
+        {{- end }}
+        {{- if .Values.persistence.enabled }}
+        {{- range $i, $pvc := .Values.extraPVCs }}
+        - name: {{ $pvc.name }}
+          persistentVolumeClaim:
+            claimName: {{ include "sch.names.fullCompName" (list $ $pvc.name) | quote }}
+        {{- end }}
+        {{- end }}
+        {{- if (.Values.application.server.ssl.enabled | default true) }}
+        - name: app-ssl-secret
+          projected: 
+            sources: 
+            - secret:
+                name: {{ .Values.application.server.ssl.tlsSecretName | default (include "sch.names.fullCompName" (list . .sch.chart.components.appInstance.name)) }}
+                items:
+                - key: tls.crt
+                  path: tls/ds-tls.crt
+                - key: tls.key
+                  path: tls/ds-tls.key            
+            {{- if (.Values.application.server.ssl.trustStoreSecretName) }}
+            - secret:
+                name: {{ .Values.application.server.ssl.trustStoreSecretName }}
+                items:
+                - key: truststore
+                  path: truststore/{{ ternary "truststore.jks" "truststore.p12" (eq (upper .Values.application.server.ssl.trustStoreType) "JKS") }}
+                - key: truststore-password
+                  path: truststore/truststore-password 
+            {{- end }}
+        {{- end }}
+        {{- if and (.Values.objectstore.useKeysFromSecrets) (.Values.objectstore.secretName) }}
+        - name: secret-{{ .Values.objectstore.secretName }}
+          secret:
+            secretName: {{ .Values.objectstore.secretName }}
+        {{- end }}
+        {{- if and (.Values.objectstore.proxyCredentialRequired ) (.Values.objectstore.proxyPasswordSecretName) }}
+        - name: secret-{{ .Values.objectstore.proxyPasswordSecretName }}
+          secret:
+            secretName: {{ .Values.objectstore.proxyPasswordSecretName }}
+        {{- end }}
+        {{- if (.Values.application.server.ssl.enabled | default true) }}
+        - name: tls-cert-store
+          emptyDir: {}
+        {{- end }}
+      {{- if (.Values.application.server.ssl.enabled | default true) }}
+      initContainers:
+        - name: "tls-init"
+          {{- if .Values.test.image.digest }}
+          image: "{{ .Values.test.image.repository }}@{{ .Values.test.image.digest }}"
+          {{- else }}
+          image: "{{ .Values.test.image.repository }}:{{ .Values.test.image.tag }}"
+          {{- end }}
+          imagePullPolicy: {{ .Values.test.image.pullPolicy }}
+          command: 
+          - "/bin/bash"
+          - -c
+          - |
+            echo "setting up tls certs..."
+            echo "release namespace - {{ .Release.Namespace }}"
+            tlsSecretNames=$(kubectl get secret -n {{ .Release.Namespace }} --field-selector type=kubernetes.io/tls | awk '{print $1}' | tail -n +2)
+            for tlSecretName in $tlsSecretNames
+            do
+              if [ $tlSecretName != {{ .Values.application.server.ssl.tlsSecretName | default (include "sch.names.fullCompName" (list . .sch.chart.components.appInstance.name)) }} ] ; then
+                kubectl get secret $tlSecretName -n {{ .Release.Namespace }} -o jsonpath="{.data.tls\.crt}" | base64 -d > /app/certstore/tls-${tlSecretName}.crt;
+              fi
+            done
+            echo "creating keystore..."
+            mkdir -p /app/certstore/keystore
+            #TODO enable keystore passwords using files
+            #keyStorePwd=$(openssl rand -base64 32)
+            keyStorePwd=password
+            openssl pkcs12 -export -name ds \
+                -in /app/secrets/tls/ds-tls.crt -inkey /app/secrets/tls/ds-tls.key \
+                -out /app/certstore/keystore/keystore.p12 -passout pass:"${keyStorePwd}" -noiter -nomaciter
+            chmod 644 /app/certstore/keystore/keystore.p12
+            echo $keyStorePwd >> /app/certstore/keystore/keystore-password
+          {{- include "sch.security.securityContext" (list . .sch.chart.document.podSecurityContext) | indent 10 }}          
+          volumeMounts:
+          - name: tls-cert-store
+            mountPath: /app/certstore
+          - name: app-ssl-secret
+            mountPath: /app/secrets/
+          
+        - name: "tls-setup"
+          {{- if .Values.image.digest }}
+          image: "{{ .Values.image.repository }}@{{ .Values.image.digest }}"
+          {{- else }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          {{- end }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: 
+          - "/bin/bash"
+          - -c
+          - |
+            echo "setting up tls..."
+            echo "release namespace - {{ .Release.Namespace }}"
+            
+            mkdir -p /app/certstore/truststore
+            trustStoreType={{ (upper .Values.application.server.ssl.trustStoreType) | default "PKCS12" }}
+            trustStoreName="truststore.p12"
+            if [ trustStoreType == "JKS" ]; then
+              trustStoreName="truststore.jks"
+            fi
+            trustStoreName={{ ternary "truststore.jks" "truststore.p12" (eq (upper .Values.application.server.ssl.trustStoreType) "JKS") }}
+            if [ -f /app/secrets/truststore/$trustStoreName ]; then
+              cp /app/secrets/truststore/$trustStoreName /app/certstore/truststore/
+              cp /app/secrets/truststore/truststore-password /app/certstore/truststore/
+              trustStorePwd=$(</app/certstore/truststore/truststore-password)
+            else
+              #TODO enable truststore passwords using files
+              #trustStorePwd=$(openssl rand -base64 32)
+              trustStorePwd=password
+              echo $trustStorePwd >> /app/certstore/truststore/truststore-password
+            fi
+
+            if ls /app/certstore/*.crt 1> /dev/null 2>&1 ; then            
+              for filename in /app/certstore/*.crt; do
+                alias=$(basename "$filename" .crt)
+                cat $filename | awk -v alias="$alias" 'split_after==1{n++;split_after=0} /-----END CERTIFICATE-----/ {split_after=1} {print > ("/app/certstore/" alias "-chain" n ".crt")}'
+                for chaincert in $(ls /app/certstore/"${alias}"-chain*.crt); do
+                  aliasChain=$(basename "$chaincert" .crt)
+                  $JAVA_HOME/bin/keytool -keystore /app/certstore/truststore/$trustStoreName -alias $aliasChain -noprompt -storetype $trustStoreType -storepass "${trustStorePwd}" -import -file $chaincert
+                done  
+              done
+            fi  
+                           
+          {{- include "sch.security.securityContext" (list . .sch.chart.document.podSecurityContext) | indent 10 }}
+          
+          volumeMounts:
+          - name: tls-cert-store
+            mountPath: /app/certstore
+          - name: app-ssl-secret
+            mountPath: /app/secrets/
+            readOnly: true   
+             
+      {{- end }}
+      affinity:
+      {{- include "documentSvc.nodeAffinity" (list . .Values.affinity.nodeAffinity) | indent 8 }}
+      {{- include "documentSvc.podAffinity" (list . .Values.affinity.podAffinity) | indent 8 }}
+      {{- include "documentSvc.podAntiAffinity" (list . .Values.affinity.podAntiAffinity) | indent 8 }}
+      tolerations:
+      {{- if .Values.tolerations}}
+      {{ toYaml .Values.tolerations| indent 8 }}
+      {{- end }}
+      {{- if .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+      {{- range $i, $topologySpreadConstraint := .Values.topologySpreadConstraints }}
+      - maxSkew: {{ $topologySpreadConstraint.maxSkew }}
+        topologyKey: {{ $topologySpreadConstraint.topologyKey }}
+        whenUnsatisfiable: {{ $topologySpreadConstraint.whenUnsatisfiable }}
+        labelSelector: 
+          matchLabels: 
+      {{ include "sch.metadata.labels.standard" (list $ $.sch.chart.components.appInstance.name) | indent 12 }}
+      {{- end }}
+      {{- end }}

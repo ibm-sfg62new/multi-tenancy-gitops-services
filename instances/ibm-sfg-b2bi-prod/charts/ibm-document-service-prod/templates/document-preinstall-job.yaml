@@ -1,0 +1,69 @@
+# (C) Copyright 2022 Syncsort Incorporated. All rights reserved.
+
+{{- if not (.Capabilities.APIVersions.Has "security.openshift.io/v1") }}
+{{ include "sch.config.init" (list . "documentSvc.sch.chart.config.values") }}
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "sch.names.fullCompName" (list . .sch.chart.components.preinstallJob.name) | quote }}
+  labels:
+{{ include "sch.metadata.labels.standard" (list . .sch.chart.components.preinstallJob.name) | indent 4 }}
+  annotations:
+    "helm.sh/hook": "pre-install, pre-upgrade"
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": "hook-succeeded, before-hook-creation"
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      name: {{ include "sch.names.fullCompName" (list . .sch.chart.components.preinstallJob.name) | quote }}
+      labels:
+{{ include "sch.metadata.labels.standard" (list . .sch.chart.components.preinstallJob.name) | indent 8 }}
+      annotations:
+{{- include "sch.metadata.annotations.metering" (list . .sch.chart.document.metering .sch.chart.document.nonMetering.nonChargeableProductMetric nil "preinstall") | indent 8 }}
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name | default "default" }}
+      hostNetwork: false
+      hostPID: false
+      hostIPC: false
+      securityContext:
+{{ include "sch.security.securityContext" (list . .sch.chart.document.specSecurityContext) | indent 8 }}
+      containers:
+      - name: preinstall
+        {{- if .Values.test.image.digest }}
+        image:  "{{ .Values.test.image.repository }}@{{ .Values.test.image.digest }}"
+        {{- else }}
+        image:  "{{ .Values.test.image.repository }}:{{ .Values.test.image.tag }}"
+        {{- end }}
+        imagePullPolicy:  "{{ .Values.test.image.pullPolicy }}"
+        securityContext:
+{{ include "sch.security.securityContext" (list . .sch.chart.document.podSecurityContext) | indent 10 }}
+        command:
+        - "/bin/bash"
+        - -c
+        - |
+          echo "starting pre install job..."
+          echo "release namespace - {{ .Release.Namespace }}"
+          
+          {{- if and (gt (.Values.replicaCount|int) 0) (.Values.application.server.ssl.enabled | default true) }}
+          kubectl get secret {{ include "sch.names.fullCompName" (list . .sch.chart.components.appInstance.name) }} -n {{ .Release.Namespace }} && echo "tls secret already exists" && exit 0;
+            echo "creating tls secret for document service";
+            openssl req -x509 -nodes -sha256 -subj "/CN={{ include "sch.names.fullCompName" (list . .sch.chart.components.appInstance.name) }}.{{ .Release.Namespace }}.svc" -days 3650 -newkey rsa:2048 -keyout tls.key -out tls.crt || { exit 1; };
+            kubectl create secret tls {{ include "sch.names.fullCompName" (list . .sch.chart.components.appInstance.name) }} --key tls.key --cert tls.crt -n {{ .Release.Namespace }} || { rm -f tls.key tls.crt; exit 1; };
+            rm -f tls.key tls.crt; exit 0;
+          {{- end }}          
+          
+        resources:
+          requests:
+            memory: 128Mi
+            cpu: 10m
+            ephemeral-storage: "16Mi"
+          limits:
+            memory: 128Mi
+            cpu: 50m
+            ephemeral-storage: "32Mi"
+      affinity:
+{{- include "documentSvc.architectureAffinity" . | indent 8 }}
+      restartPolicy: Never
+{{- end }}

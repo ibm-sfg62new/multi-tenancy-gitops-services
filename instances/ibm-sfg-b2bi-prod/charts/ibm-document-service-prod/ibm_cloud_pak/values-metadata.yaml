@@ -1,0 +1,619 @@
+# (C) Copyright 2021 Syncsort Incorporated. All rights reserved.
+
+license:
+  __metadata:
+    label: "Accept License"
+    description: "Set it to true to accept license."
+    type: "string"
+    immutable: false
+    required: true 
+
+replicaCount:
+  __metadata:
+    label: "Replica count"
+    description: "Number of replicas."
+    type: "string"
+    immutable: false
+    required: true  
+    
+image:
+  repository: 
+    __metadata:
+      label: "Image repository"
+      description: "Container registry to pull the image."
+      type: "string"
+      required: true
+  tag:
+    __metadata:
+      label: "Image tag"
+      description: "A tag is a label applied to a image in a repository. Tags are how various images in a repository are distinguished from each other."
+      type: "string"
+      required: true
+  digest:
+    __metadata:
+      label: "Image digest"
+      description: "Image tag to to uniquely and immutably identify a container image."
+      type: "string"
+      required: true
+  pullPolicy: 
+    __metadata:
+      label: "Image pull policy"
+      description: "The default pull policy is IfNotPresent which causes the Kubelet to skip pulling an image if it already exists."
+      options:
+      - label: 'Always'
+        value: 'Always'
+      - label: 'Never'
+        value: 'Never'
+      - label: 'IfNotPresent'
+        value: 'IfNotPresent'
+      type: "string"
+  pullSecret:
+    __metadata:
+      label: "Image pull Secret"
+      description: "Secret used for pulling from private repositories."
+      type: "string"
+arch:
+  __metadata:
+    label: "Architecture scheduling preferences"
+  amd64:
+    __metadata:
+      name: "amd64"
+      label: "amd64 scheduling preference"
+      description: "Architecture preference for target worker node."
+      type: "string"
+      immutable: false
+      required: true
+      options:
+      - label: "0 - Do not use"
+        value: "0 - Do not use"
+      - label: "1 - Least preferred"
+        value: "1 - Least preferred"
+      - label: "2 - No Preference"
+        value: "2 - No Preference"  
+      - label: "3 - Most preferred"
+        value: "3 - Most preferred"  
+ 
+  ppc64le:
+    __metadata:
+      name: "ppc64le"
+      label: "ppc64le scheduling preference"
+      description: "Architecture preference for target worker node."
+      type: "string"
+      immutable: false
+      required: true
+      options:
+      - label: "0 - Do not use"
+        value: "0 - Do not use"
+      - label: "1 - Least preferred"
+        value: "1 - Least preferred"
+      - label: "2 - No Preference"
+        value: "2 - No Preference"  
+      - label: "3 - Most preferred"
+        value: "3 - Most preferred"  
+  
+  s390x:
+    __metadata:
+      name: "s390x"
+      label: "s390x scheduling preference"
+      description: "Architecture preference for target worker node."
+      type: "string"
+      immutable: false
+      required: true
+      options:
+      - label: "0 - Do not use"
+        value: "0 - Do not use"
+      - label: "1 - Least preferred"
+        value: "1 - Least preferred"
+      - label: "2 - No Preference"
+        value: "2 - No Preference"  
+      - label: "3 - Most preferred"
+        value: "3 - Most preferred" 
+
+serviceAccount:
+  __metadata:
+    label: "Service Account"
+    description: "User specified Service Account details."
+  name:
+    __metadata:
+      label: "Existing Service Account Name"
+      type: "string"
+      description: "If the user wishes to use own/already created service account, can specify the name here, the default service account is used from the namespace otherwise"
+      immutable: false
+      required: false
+
+persistence:
+  __metadata:
+    label: "Persistence configuration"
+    description: "Data persistence configuration"
+  enabled:
+    __metadata:
+      label: "Enable persistence storage"
+      description: "Select this checkbox to store container data on a persistent volume so that the data is preserved if the pod is stopped."
+      type: "boolean"
+      immutable: false
+      required: false
+  useDynamicProvisioning:
+    __metadata:
+      label: "Use dynamic provisioning"
+      description: "Select this checkbox to allow the cluster to automatically provision new storage resource and create PersistentVolume objects."
+      type: "boolean"
+      immutable: false
+      required: true
+
+appLogsPVC:
+  __metadata:
+    label: "Persistent Volume Claim for application logs"
+    description: "Application logs volume configuration ."
+  name:
+    __metadata:
+      label: "Name of the persistent volume claim"
+      description: "By default a persistent volume claim for logs will be created with this name."
+  storageClassName:
+    __metadata:
+      label: "StorageClass Name"
+      description: "Choose a specific storage class name. Defaults to the default storage class in the cluster."
+  selector:
+    label:
+      __metadata:
+        label: "Label"
+        description: "Key label matching to specify app logs PVC ."
+    value:
+      __metadata:
+        label: "Value"
+        description: "Key value matching to specify app logs PVC ."
+  accessMode:
+    __metadata:
+      label: "Access Mode"
+      description: "By default Access Mode is ReadWriteMany."
+  size:
+    __metadata:
+      label: "Size of the volume claim"
+      description: "Defaults to 500Mi of storage request. Choose a different size of disk if needed."
+
+extraPVCs:
+  __metadata:
+    label: "Extra Volume"
+    description: "User can use this property for extra persistent volume claim shared across all deployments."
+
+security:
+  __metadata:
+    label: "Security"
+    description: "Specify the security"
+  supplementalGroups:
+    __metadata:
+      label: "Supplemental GID"
+      description: "Supplemental group id for persistent volume"
+      type: "string"  
+      immutable: false
+      required: false
+  fsGroup:
+    __metadata:
+      label: "File System GID"
+      description: "File system group id for persistent volume"
+      type: "number"
+      immutable: false
+      required: false
+  runAsUser:
+    __metadata:
+      label: 'Run as User'
+      description: 'User id to use when running the deployment/containers'
+      type: "string"
+      immutable: false
+      required: false 
+
+ingress:
+  __metadata:
+    label: "Ingress"
+    description: "Specify configurations for ingress resource."
+  enabled:
+    __metadata:
+      label: "Enable Ingress"
+      description: "Specify whether to enable ingress."
+      type: "boolean"
+      immutable: false
+      required: true
+  host:
+    __metadata:
+      label: "Internal ingress host for document service"
+      description: "Internally accessible ingress host dns name."
+      type: "string"
+      immutable: false
+      required: false
+  tls:
+    secretName:
+      __metadata:
+        label: "Secret name"
+        description: "Secret name for tls"
+        type: "string"
+        immutable: false
+        required: false 
+  controller:
+    __metadata:
+      label: "Ingress Controller"
+      description: "Controller for ingress."
+      type: "string"
+      immutable: false
+      required: true
+  annotations:
+    __metadata:
+      label: "Annotations for this Ingress Resource"
+      type: "string"
+      description: "Specify annotations for this ingress resource with name and value for each annotation"
+      immutable: false
+      required: false
+  labels:
+    __metadata:
+      label: "Labels for this Ingress Resource"
+      type: "string"
+      description: "Specify labels for this ingress resource with name and value for each label"
+      immutable: false
+      required: false
+
+logs:
+  __metadata:
+    label: "Logging configurations"
+    description: "Used to control the application and console logs."
+  enableAppLogOnConsole:
+    __metadata:
+      label: "App log on console"
+      description: "If true, redirects the application logs to the respective pod's console."
+      type: "boolean"
+      required: true
+
+service:
+  __metadata:
+    label: "Service configurations"
+    description: "Service configurations for external access."
+  type:
+    __metadata:
+      label: "Service type"
+      description: "Specify kubernetes service type."
+      type: "string"
+      immutable: true
+      required: false
+      options:
+      - label: 'ClusterIP'
+        value: 'ClusterIP'
+      - label: 'NodePort'
+        value: 'NodePort'
+      - label: 'LoadBalancer'
+        value: 'LoadBalancer'
+      - label: 'ExternalName'
+        value: 'ExternalName'
+  externalPort:
+    __metadata:
+      label: "Service external port"
+      description: "Specifies the service port."
+      type: "number"
+      immutable: false
+      required: true
+
+livenessProbe:
+  initialDelaySeconds:
+    __metadata:
+      label: "Initial delay in seconds"
+      description: "Initial delay in seconds for liveness probe"
+  timeoutSeconds:
+    __metadata:
+      label: "Timeout in seconds"
+      description: "Timeout in seconds for liveness probe"
+  periodSeconds:
+    __metadata:
+      label: "Interval period in seconds"
+      description: "Interval period in seconds for liveness probe" 
+
+readinessProbe:
+  initialDelaySeconds:
+    __metadata:
+      label: "Initial delay in seconds"
+      description: "Initial delay in seconds for readiness probe"
+  timeoutSeconds:
+    __metadata:
+      label: "Timeout in seconds"
+      description: "Timeout in seconds for readiness probe"
+  periodSeconds:
+    __metadata:
+      label: "Interval period in seconds"
+      description: "Interval period in seconds for readiness probe" 
+
+extraPVCs:
+  __metadata:
+    label: "Extra Volume"
+    description: "User can use this property for extra persistent volume claim"
+#  name:
+#    __metadata:
+#      label: "Name of the persistent volume claim"
+#      description: "By default a persistent volume claim will be created with this name."
+# storageClassName:
+#   __metadata:
+#     label: "StorageClass Name"
+#      description: "Choose a specific storage class name. Defaults to the default storage class in the cluster."
+#  selector:
+#    __metadata:
+#      label: "Selector"
+#      description: "Select the fields for Extra volume."
+#    label:
+#      __metadata:
+#        label: "Label"
+#        description: "Key value matching to specify Extra Volume ."
+#    value:
+#      __metadata:
+#        label: "Value"
+#        description: "Key value matching to specify Extra volume  ."
+#  accessMode:
+#    __metadata:
+#      label: "Access Mode"
+#     description: "By default Access Mode is ReadOnlyMany ."
+#  size:
+#    __metadata:
+#      label: "Size of the volume claim"
+#      description: "Defaults to 100Gi of storage request. Choose a different size of disk if needed."
+
+resources: 
+  limits:
+    cpu:
+      __metadata:
+        label: "CPU limit"
+        description: "The upper limit of CPU core. Specify integers, fractions (e.g. 0.5), or millicores values(e.g. 100m, where 100m is equivalent to .1 core)."
+        type: "string"
+        required: true
+    memory:
+      __metadata:
+        label: "Memory limit"
+        description: "The memory upper limit in bytes. Specify integers with suffixes: E, P, T, G, M, K, or power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki."
+        type: "string"
+        required: true
+  requests:
+    cpu:
+      __metadata:
+        label: "CPU request"
+        description: "The minimum required CPU core. Specify integers, fractions (e.g. 0.5), or millicore values(e.g. 100m, where 100m is equivalent to .1 core)."
+        type: "string"
+        required: true
+    memory:
+      __metadata:
+        label: "Memory request"
+        description: "The minimum memory in bytes. Specify integers with one of these suffixes: E, P, T, G, M, K, or power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki."
+        type: "string"
+        required: true
+
+autoscaling:
+  enabled:
+    __metadata:
+      label: "Enable Automatic Scaling"
+      description: "Specifies whether a horizontal pod autoscaler (HPA) is deployed. Note that enabling this field disables the Number of replicas field."
+      type: "boolean"
+      immutable: false
+      required: false
+  minReplicas:
+    __metadata:
+      label: "Minimum Number of Replicas"
+      description: "Lower limit for the number of pods that can be set by the autoscaler."
+      type: "number"
+      immutable: false
+      required: true
+  maxReplicas:
+    __metadata:
+      label: "Maximum Number of Replicas"
+      description: "Upper limit for the number of pods that can be set by the autoscaler.  Cannot be lower than the minimum number of replicas."
+      type: "number"
+      immutable: false
+      required: true
+  targetCPUUtilizationPercentage:
+    __metadata:
+      label: "Target CPU Utilization Percentage"
+      description: "Target average CPU utilization (represented as a percentage of requested CPU) over all the pods."
+      type: "number"
+      immutable: false
+      required: true
+ 
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      __metadata:
+        label: "Node Affinity RequiredDuringSchedulingIgnoredDuringExecution"
+        type: "string"
+        description: "Specify in accordance with k8s PodSpec.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution"
+    preferredDuringSchedulingIgnoredDuringExecution:
+      __metadata:
+        label: "Node Affinity PreferredDuringSchedulingIgnoredDuringExecution"
+        type: "string"
+        description: "Specify in accordance with k8s PodSpec.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution"
+
+  podAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      __metadata:
+        label: "Pod Affinity RequiredDuringSchedulingIgnoredDuringExecution"
+        type: "string"
+        description: "Specify in accordance with k8s PodSpec.podAffinity.requiredDuringSchedulingIgnoredDuringExecution"
+    preferredDuringSchedulingIgnoredDuringExecution:
+      __metadata:
+        label: "Pod Affinity PreferredDuringSchedulingIgnoredDuringExecution"
+        type: "string"
+        description: "Specify in accordance with k8s PodSpec.podAffinity.preferredDuringSchedulingIgnoredDuringExecution"
+
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      __metadata:
+        label: "Pod Anti Affinity RequiredDuringSchedulingIgnoredDuringExecution"
+        type: "string"
+        description: "Specify in accordance with k8s PodSpec.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution"
+    preferredDuringSchedulingIgnoredDuringExecution:
+      __metadata:
+        label: "Pod Anti Affinity PreferredDuringSchedulingIgnoredDuringExecution"
+        type: "string"
+        description: "Specify in accordance with k8s PodSpec.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution"
+  
+topologySpreadConstraints:
+  __metadata:
+    label: "Topology spread constraints for pods"
+    type: "string"
+    description: "Topology spread constraints to control how Pods are spread across your cluster among failure-domains such as regions, zones, nodes, and other user-defined topology domains."    
+   
+tolerations:
+  __metadata:
+    label: "Tolerations for pods"
+    type: "string"
+    description: "Tolerations are applied to pods, and allow the pods to schedule onto nodes with matching taints"   
+
+nameOverride:
+  __metadata:
+    label: "Name Override"
+    description: "This name will be appended to the release name to form the name of resources created by the chart."
+    type: "string"
+    immutable: false
+    required: false  
+
+fullnameOverride:
+  __metadata:
+    label: "Full Name Override"
+    description: "This name will be appended to the release name to form the name of resources created by the chart."
+    type: "string"
+    immutable: false
+    required: false
+
+env:
+  __metadata:
+    label: "Environment Variables"
+    description: "Configure additional environment variables"
+        
+application:
+  __metadata:
+    label: "Application configuration"
+    description: "Application configuration parameters"
+  server:
+    port:
+      __metadata:
+        label: "Application internal server port"
+        description: "Application server port to use."
+        type: "number"
+    jetty:
+      acceptors:
+        __metadata:
+          label: "Number of acceptor threads"
+          description: "Number of acceptor threads to use."
+          type: "number"
+      maxHttpPostSize:
+        __metadata:
+          label: "Maximum HTTP post size "
+          description: "Maximum size of the HTTP post content."
+          type: "number"
+      selectors:
+        __metadata:
+          label: "Number of selector threads"
+          description: "Number of selector threads to use."
+          type: "number"
+    ssl:
+      tlsSecretName:
+        __metadata:
+          label: "Tls secret name"
+          description: "Name of the secret holding tls cert and key"
+          type: "string" 
+          immutable: false
+          required: false      
+      trustStoreType:
+        __metadata:
+          label: "Trust store type"
+          description: "Type of the trust store."
+          type: "string"
+          options:
+          - label: 'PKCS12'
+            value: 'PKCS12'
+          - label: 'JKS'
+            value: 'JKS'
+          immutable: false
+          required: false
+      trustStoreSecretName:
+        __metadata:
+          label: "Trust store secret name"
+          description: "Name of the secret holding trust store passwords and certificates."
+          type: "string"
+          immutable: false
+          required: true 
+      clientAuth:
+        __metadata:
+          label: "Client authentication mode"
+          description: "Client authentication mode. Requires a trust store."
+          type: "string" 
+    logging:
+      level:
+        __metadata:
+          label: "Log level severity"
+          description: "Log level security mapping."
+          type: "string"
+      rolloverSize:
+        __metadata:
+          label: "Rollover log file size"
+          description: "Log file size after which log file will be rolled over. Should be in KB, MB or GB e.g. 10 MB"
+          type: "string"
+      numberOfFiles:
+        __metadata:
+          label: "Number of old log files to retain"
+          description: "Number of older log archives to retain."
+          type: "number"
+    spring:
+      servlet
+        multipartMaxRequestSize:
+          __metadata:
+            label: "Max request size"
+            description: "Maximum size for a multipart request."
+            type: "number"
+        multipartMaxFileSize:
+          __metadata:
+            label: "Max file size"
+            description: "Maximum size for a multipart file."
+            type: "number"
+dashboard:
+  __metadata:
+    label: "Dashboard Monitoring"
+    description: "Enable it to have a monitoring dashboard on Kubernetes platform"
+  enabled:
+    __metadata:
+      label: "Enable Dashboard"
+      description: "User specify Whether Dashboard is enabled or not.By default it is false"
+      
+test:
+  __metadata:
+    name: 'test'
+    label: 'Test configuration'
+    description: 'Parameters to configure the tests'
+    hidden: true
+
+  image:
+    repository:
+      __metadata:
+        name: 'test.repository'
+        label: 'Test docker image repository'
+        description: 'Docker image repository for test image'
+        type: 'string'
+        immutable: false
+        required: true
+    tag:
+      __metadata:
+        name: 'test.tag'
+        label: 'test image tag'
+        description: 'Test docker image tag'
+        type: 'string'
+        immutable: false
+        required: true
+    digest:
+      __metadata:
+        label: "Image digest"
+        description: "Image tag to to uniquely and immutably identify a container image."
+        type: "string"
+        required: true
+    pullPolicy:
+      __metadata:
+        name: 'pullPolicy'
+        label: 'Image pull policy'
+        description: 'Image pull policy for the docker images'
+        type: 'string'
+        immutable: false
+        required: true
+        options:
+          - label: 'Always'
+            value: 'Always'
+          - label: 'Never'
+            value: 'Never'
+          - label: 'IfNotPresent'
+            value: 'IfNotPresent'

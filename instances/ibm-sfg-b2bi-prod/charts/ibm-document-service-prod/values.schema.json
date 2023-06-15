@@ -1,0 +1,1991 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema",
+	"$id": "http://example.com/example.json",
+	"type": "object",
+	"default": {},
+	"required": ["license", "replicaCount", "image", "arch", "serviceAccount", "persistence", "appLogsPVC", "ingress", "application", "objectstore" ,"test"],
+	"properties": {
+        "license": {
+            "$id": "#/properties/license",
+            "type": "boolean",
+            "title": "DM/SFG license agreement",
+            "description": "Accept DM/SFG license after reading it. DM: https://ibm.biz/BdPzHS SFG: https://ibm.biz/BdPzHv",
+            "default": false
+        },
+        "replicaCount": {
+            "$id": "#/properties/replicaCount",
+            "type": "integer",
+            "title": "Replica Count",
+            "description": "Number of replicas.",
+            "default": 1
+        },
+        "nameOverride": {
+			"$id": "#/properties/nameOverride",
+			"type": [
+                "integer",
+                "null"
+            ],
+			"title": "Name Override",
+			"description": "This name will be appended to the release name to form the name of resources created by the chart.",
+			"default": ""
+		},
+		"fullnameOverride": {
+			"$id": "#/properties/fullnameOverride",
+			"type": [
+                "integer",
+                "null"
+            ],
+			"title": "Full Name Override",
+			"description": "This name will be appended to the release name to form the name of resources created by the chart.",
+			"default": ""
+		},
+        "image": {
+            "$id": "#/properties/image",
+            "type": "object",
+            "title": "DM/SFG Image",
+            "default": {
+
+            },
+            "required": [
+                "repository",
+                "tag",
+                "pullPolicy",
+                "pullSecret"
+            ],
+            "properties": {
+                "repository": {
+                    "$id": "#/properties/image/properties/repository",
+                    "type": "string",
+                    "title": "DM/SFG image repository",
+                    "description": "Docker registry to pull DM/SFG image from.",
+                    "default": "cp.icr.io/cp/ibm-b2bi/dm"
+                },
+                "tag": {
+                    "$id": "#/properties/image/properties/tag",
+                    "type": "string",
+                    "title": "Image tag",
+                    "description": "A tag is a label applied to a image in a repository. Tags are how various images in a repository are distinguished from each other.",
+                    "default": "1.0"
+                },
+                "digest": {
+                    "$id": "#/properties/image/properties/digest",
+                    "type": [
+                        "string",
+                        "null"
+                    ],
+                    "title": "Image digest",
+                    "description": "A digest is a hash of a Docker image supported by the Docker v2 registry format.",
+                    "default": null
+                },
+                "pullPolicy": {
+                    "$id": "#/properties/image/properties/pullPolicy",
+                    "type": "string",
+                    "title": "Image pull policy",
+                    "description": "The default pull policy is IfNotPresent which causes the Kubelet to skip pulling an image if it already exists.",
+                    "default": "IfNotPresent"
+                },
+                "pullSecret": {
+                    "$id": "#/properties/image/properties/pullSecret",
+                    "type": ["string","null"],
+                    "title": "DM Image pull Secret",
+                    "description": "Secret used for pulling from private repositories.",
+                    "default": ""
+                }
+            }
+        },
+		"arch": {
+			"$id": "#/properties/arch",
+			"type": "object",
+			"title": "Architecture scheduling preferences",
+			"default": {
+
+			},
+			"required": [
+				"amd64",
+				"ppc64le",
+				"s390x"
+			],
+			"properties": {
+				"amd64": {
+					"$id": "#/properties/arch/properties/amd64",
+					"type": "string",
+					"title": "amd64",
+					"default": "2 - No Preference"
+				},
+				"ppc64le": {
+					"$id": "#/properties/arch/properties/ppc64le",
+					"type": "string",
+					"title": "ppc64le",
+					"default": "2 - No Preference"
+				},
+				"s390x": {
+					"$id": "#/properties/arch/properties/s390x",
+					"type": "string",
+					"title": "s390x",
+					"default": "2 - No Preference"
+				}
+			},
+			"additionalProperties": true
+		},
+		"serviceAccount": {
+			"$id": "#/properties/serviceAccount",
+			"type": "object",
+			"title": "Service Account",
+			"description": "User Specifed Service Account details.",
+			"default": {
+
+			},
+			"required": [
+				"name"
+			],
+			"properties": {
+				"name": {
+					"$id": "#/properties/serviceAccount/properties/name",
+					"type": "string",
+					"title": "Existing Service Account Name",
+					"description": "If the user wishes to use own/already created service account, can specify the name here, default value is default.",
+					"default": "default"
+				}
+			}
+		},
+		"persistence": {
+			"$id": "#/properties/persistence",
+			"type": "object",
+			"title": "Persistence configuration",
+			"description": "Data persistence configuration.",
+			"default": {
+
+			},
+			"required": [
+				"enabled",
+				"useDynamicProvisioning"
+			],
+			"properties": {
+				"enabled": {
+					"$id": "#/properties/persistence/properties/enabled",
+					"type": "boolean",
+					"title": "Enable persistence storage for DM/SFG",
+					"description": "Select this checkbox to store DM/SFG data on a persistent volume so that the data is preserved if the pod is stopped.",
+					"default": true
+				},
+				"useDynamicProvisioning": {
+					"$id": "#/properties/persistence/properties/useDynamicProvisioning",
+					"type": "boolean",
+					"title": "Use dynamic provisioning",
+					"description": "Select this checkbox to allow the cluster to automatically provision new storage resource and create PersistentVolume objects.",
+					"default": false
+				}
+			}
+		},
+		"appLogsPVC": {
+			"$id": "#/properties/appLogsPVC",
+			"type": "object",
+			"title": "App Logs",
+			"description": "App logs volume configuration.",
+			"default": {
+
+			},
+			"required": [
+				"accessMode",
+				"size"
+			],
+			"properties": {
+				"preDefinedLogsPVCName": {
+					"$id": "#/properties/appLogsPVC/properties/preDefinedLogsPVCName",
+					"type": ["string","null"],
+					"title": "Name of the pre define persistent volume claim for logs",
+					"description": "By default a persistent volume claim for logs will be created with this name.",
+					"default": null
+				},
+				"storageClassName": {
+					"$id": "#/properties/appLogsPVC/properties/storageClassName",
+					"type": "string",
+					"title": "StorageClass Name",
+					"description": "Choose a specific storage class name. Defaults to the default storage class in the cluster.",
+					"default": ""
+				},
+				"selector": {
+					"$id": "#/properties/appLogsPVC/properties/selector",
+					"type": "object",
+					"title": "Selector",
+					"default": {
+
+					},
+					"required": [
+					],
+					"properties": {
+						"label": {
+							"$id": "#/properties/appLogsPVC/properties/selector/properties/label",
+							"type": "string",
+							"title": "Label",
+							"description": "Key label matching to specify app logs PVC .",
+							"default": "intent"
+						},
+						"value": {
+							"$id": "#/properties/appLogsPVC/properties/selector/properties/value",
+							"type": "string",
+							"title": "Value",
+							"description": "Key value matching to specify app logs PVC .",
+							"default": "logs"
+						}
+					}
+				},
+				"accessMode": {
+					"$id": "#/properties/appLogsPVC/properties/accessMode",
+					"type": "string",
+					"title": "Access Mode",
+					"description": "By default Access Mode is ReadWriteMany.",
+					"default": "ReadWriteMany"
+				},
+				"size": {
+					"$id": "#/properties/appLogsPVC/properties/size",
+					"type": "string",
+					"title": "Size of the volume claim",
+					"description": "Defaults to 500Mi of storage request. Choose a different size of disk if needed.",
+					"default": "500Mi"
+				}
+			}
+		},
+		"extraPVCs": {
+			"$id": "#/properties/extraPVCs",
+			"type": ["object", "array"],
+			"title": "Extra Volume",
+			"description": "User can use this property for extra persistent volume claim shared across all deployments.",
+			"default": [
+
+			],
+			"additionalItems": true,
+			"items": {
+				"$id": "#/properties/extraPVCs/items",
+				"type": "object"
+			}
+		},
+		"security": {
+			"$id": "#/properties/security",
+			"type": "object",
+			"title": "Security",
+			"description": "Specify the security",
+			"default": {
+
+			},
+			"required": [
+				"supplementalGroups"
+			],
+			"properties": {
+				"supplementalGroups": {
+					"$id": "#/properties/security/properties/supplementalGroups",
+					"type": "array",
+					"title": "Supplemental GID",
+					"description": "Supplemental group id for persistent volume.",
+					"default": [
+						65534
+					],
+					"additionalItems": true,
+					"items": {
+						"$id": "#/properties/security/properties/supplementalGroups/items",
+						"type": "integer",
+						"default": 65534
+					}
+				},
+				"fsGroup": {
+					"$id": "#/properties/security/properties/fsGroup",
+					"type": [
+						"integer",
+						"null"
+					],
+					"title": "File System GID",
+					"description": "File system group id for persistent volume.",
+					"default": null
+				},
+                                "fsGroupChangePolicy": {
+                                        "$id": "#/properties/security/properties/fsGroupChangePolicy",
+                                        "type": "string",
+                                        "title": "File System Group Change Policy",
+                                        "description": "File system Group change policy.",
+                                        "default": "OnRootMismatch",
+                                        "enum": ["OnRootMismatch", "Always"]
+                                },
+				"runAsUser": {
+					"$id": "#/properties/security/properties/runAsUser",
+					"type": [
+						"integer",
+						"null"
+					],
+					"title": "Run as User",
+					"description": "User id to use when running the deployment/containers.",
+					"default": {
+
+					}
+				},
+				"runAsGroup": {
+					"$id": "#/properties/security/properties/runAsGroup",
+					"type": [
+						"integer",
+						"null"
+					],
+					"title": "Run as Group",
+					"description": "Group id to use when running the deployment/containers.",
+					"default": {
+
+					}
+				}
+			}
+		},
+        "logs": {
+			"$id": "#/properties/logs",
+			"type": "object",
+			"title": "DM Logging",
+			"description": "Used to control the DM application and console logs.",
+			"default": {
+
+			},
+			"required": [
+				"enableAppLogOnConsole"
+			],
+			"properties": {
+				"enableAppLogOnConsole": {
+					"$id": "#/properties/logs/properties/enableAppLogOnConsole",
+					"type": "boolean",
+					"title": "App log on console",
+					"description": "If true, redirects the application logs to the respective pod's console.",
+					"default": true
+				}
+			}
+		},
+        "livenessProbe": {
+            "$id": "#/properties/livenessProbe",
+            "type": "object",
+            "title": "Liveness Probe",
+            "default": {
+
+            },
+            "required": [
+                "initialDelaySeconds",
+                "timeoutSeconds",
+                "periodSeconds"
+            ],
+            "properties": {
+                "initialDelaySeconds": {
+                    "$id": "#/properties/livenessProbe/properties/initialDelaySeconds",
+                    "type": "integer",
+                    "title": "Initial delay in seconds",
+                    "description": "Initial delay in seconds for liveness probe.",
+                    "default": 60
+                },
+                "timeoutSeconds": {
+                    "$id": "#/properties/livenessProbe/properties/timeoutSeconds",
+                    "type": "integer",
+                    "title": "Timeout in seconds",
+                    "description": "Timeout in seconds for liveness probe.",
+                    "default": 30
+                },
+                "periodSeconds": {
+                    "$id": "#/properties/livenessProbe/properties/periodSeconds",
+                    "type": "integer",
+                    "title": "Interval period in seconds",
+                    "description": "Interval period in seconds for liveness probe.",
+                    "default": 60
+                }
+            }
+        },
+        "readinessProbe": {
+            "$id": "#/properties/readinessProbe",
+            "type": "object",
+            "title": "Readiness Probe",
+            "default": {
+
+            },
+            "required": [
+                "initialDelaySeconds",
+                "timeoutSeconds",
+                "periodSeconds"
+            ],
+            "properties": {
+                "initialDelaySeconds": {
+                    "$id": "#/properties/readinessProbe/properties/initialDelaySeconds",
+                    "type": "integer",
+                    "title": "Initial delay in seconds",
+                    "description": "Initial delay in seconds for readiness probe.",
+                    "default": 60
+                },
+                "timeoutSeconds": {
+                    "$id": "#/properties/readinessProbe/properties/timeoutSeconds",
+                    "type": "integer",
+                    "title": "Timeout in seconds",
+                    "description": "Timeout in seconds for readiness probe.",
+                    "default": 5
+                },
+                "periodSeconds": {
+                    "$id": "#/properties/readinessProbe/properties/periodSeconds",
+                    "type": "integer",
+                    "title": "Interval period in seconds",
+                    "description": "Interval period in seconds for readiness probe.",
+                    "default": 60
+                },
+                "command": {
+                    "$id": "#/properties/readinessProbe/properties/command",
+                    "type": ["string",
+                        "null"],
+                    
+                    "title": "Command to be executed",
+                    "description": "Command to be executed for readiness probe.",
+                    "default": null
+                },
+                "arg": {
+                    "$id": "#/properties/readinessProbe/properties/arg",
+                    "type": "array",
+                    "title": "Command arguments",
+                    "description": "Command arguments for readiness probe.",
+                    "default": [
+
+                    ],
+                    "additionalItems": true,
+                    "items": {
+                        "$id": "#/properties/readinessProbe/properties/arg/items",
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "service": {
+            "$id": "#/properties/service",
+            "type": "object",
+            "title": "Service",
+            "default": {
+
+            },
+            "required": [
+                "type",
+                "externalPort"
+            ],
+            "properties": {
+                "type": {
+                    "$id": "#/properties/service/properties/type",
+                    "type": "string",
+                    "title": "Service type",
+                    "description": "Specify kubernetes service type.",
+                    "default": "ClusterIP"
+                },
+                "externalPort": {
+                    "$id": "#properties/frontendService/properties/externalPort",
+                    "type": "integer",
+                    "title": "externalPort",
+                    "description": "Specify kubernetes service port.",
+                    "default": 80
+                }
+            }
+        },
+		"ingress": {
+			"$id": "#/properties/ingress",
+			"type": "object",
+			"title": "Ingress",
+			"description": "Specify configurations for ingress resource.",
+			"default": {
+
+			},
+			"required": [
+				"enabled",
+                "host"
+			],
+			"properties": {
+				"enabled": {
+					"$id": "#/properties/ingress/properties/enabled",
+					"type": "boolean",
+					"title": "Enable Ingress",
+					"description": "Specify whether to enable ingress.",
+					"default": true
+				},
+                "host": {
+					"$id": "#/properties/ingress/properties/host",
+					"type": "string",
+					"title": "Ingress host",
+					"description": "host for ingress.",
+					"default": "document-svc.local"
+				},
+                "tls": {
+                    "$id": "#properties/ingress/properties/internal/properties/tls",
+                    "type": "object",
+                    "title": "TLS",
+                    "default": {
+                    },
+                    "required": [
+                    ],
+                    "properties": {
+                        "secretName": {
+                            "$id": "#/properties/ingress/properties/internal/properties/tls/properties/secretName",
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "title": "Secret name",
+                            "description": "Secret name for tls.",
+                            "default": null
+                        }
+                    }
+                },
+				"controller": {
+					"$id": "#/properties/ingress/properties/controller",
+					"type": "string",
+					"title": "Ingress Controller",
+					"description": "Controller for ingress.",
+					"default": "nginx"
+				},
+				"annotations": {
+					"$id": "#/properties/ingress/properties/annotations",
+					"type": "object",
+					"title": "Annotations for this Ingress Resource",
+					"description": "Specify annotations for this ingress resource with name and value for each annotation",
+					"default": {
+
+					},
+					"required": [
+
+					],
+					"additionalProperties": true
+				},
+				"labels": {
+                    "$id": "#/properties/ingress/properties/labels", 
+                    "type": "object",
+                    "title": "Labels",
+                    "description": "Specify annotations for this ingress resource with name and value for each annotation",
+					"default": {
+
+					}
+                }
+			}
+		},
+        "affinity": {
+			"$id": "#/properties/affinity",
+			"type": "object",
+			"title": "affinity",
+			"description": "Specify configurations for affinity resource.",
+			"default": {
+
+			},
+			"required": [
+				"nodeAffinity",
+				"podAffinity",
+                "podAntiAffinity"
+			],
+            "properties": {
+                "nodeAffinity": {
+					"$id": "#/properties/affinity/properties/nodeAffinity",
+					"type": "object",
+					"title": "Node Affinity",
+					"default": {
+
+					},
+					"required": [
+						],
+					"properties": {
+						"requiredDuringSchedulingIgnoredDuringExecution": {
+							"$id": "#/properties/affinity/properties/nodeAffinity/properties/requiredDuringSchedulingIgnoredDuringExecution",
+							"type": ["array","object"],
+							"title": "Node Affinity RequiredDuringSchedulingIgnoredDuringExecution",
+							"description": "Specify in accordance with k8s PodSpec.nodeAffinity.requiredDuringSchedulingIgnoredDuringExecution.",
+							"default": [
+
+							],
+							"additionalItems": true,
+							"items": {
+								"$id": "#/properties/affinity/properties/nodeAffinity/properties/requiredDuringSchedulingIgnoredDuringExecution/items",
+								"type": "object"
+							}
+						},
+						"preferredDuringSchedulingIgnoredDuringExecution": {
+							"$id": "#/properties/affinity/properties/nodeAffinity/properties/preferredDuringSchedulingIgnoredDuringExecution",
+							"type": ["array","object"],
+							"title": "Node Affinity PreferredDuringSchedulingIgnoredDuringExecution",
+							"description": "Specify in accordance with k8s PodSpec.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution.",
+							"default": [
+
+							],
+							"additionalItems": true,
+							"items": {
+								"$id": "#/properties/affinity/properties/nodeAffinity/properties/preferredDuringSchedulingIgnoredDuringExecution/items",
+								"type": "object"
+							}
+						}
+					}
+				},
+				"podAffinity": {
+					"$id": "#/properties/affinity/properties/podAffinity",
+					"type": "object",
+					"title": "Pod Affinity",
+					"default": {
+
+					},
+					"required": [
+						],
+					"properties": {
+						"requiredDuringSchedulingIgnoredDuringExecution": {
+							"$id": "#/properties/affinity/properties/podAffinity/properties/requiredDuringSchedulingIgnoredDuringExecution",
+							"type": ["array","object"],
+							"title": "Pod Affinity RequiredDuringSchedulingIgnoredDuringExecution",
+							"description": "Specify in accordance with k8s PodSpec.podAffinity.requiredDuringSchedulingIgnoredDuringExecution.",
+							"default": [
+
+							],
+							"additionalItems": true,
+							"items": {
+								"$id": "#/properties/affinity/properties/podAffinity/properties/requiredDuringSchedulingIgnoredDuringExecution/items",
+								"type": "object"
+							}
+						},
+						"preferredDuringSchedulingIgnoredDuringExecution": {
+							"$id": "#/properties/affinity/properties/podAffinity/properties/preferredDuringSchedulingIgnoredDuringExecution",
+							"type": ["array","object"],
+							"title": "Pod Affinity PreferredDuringSchedulingIgnoredDuringExecution",
+							"description": "Specify in accordance with k8s PodSpec.podAffinity.preferredDuringSchedulingIgnoredDuringExecution.",
+							"default": [
+
+							],
+							"additionalItems": true,
+							"items": {
+								"$id": "#/properties/affinity/properties/podAffinity/properties/preferredDuringSchedulingIgnoredDuringExecution/items",
+								"type": "object"
+							}
+						}
+					}
+				},
+				"podAntiAffinity": {
+					"$id": "#/properties/affinity/properties/podAntiAffinity",
+					"type": "object",
+					"title": "Pod Anti Affinity",
+					"default": {
+
+					},
+					"required": [
+						],
+					"properties": {
+						"requiredDuringSchedulingIgnoredDuringExecution": {
+							"$id": "#/properties/affinity/properties/podAntiAffinity/properties/requiredDuringSchedulingIgnoredDuringExecution",
+							"type": ["array","object"],
+							"title": "Pod Anti Affinity RequiredDuringSchedulingIgnoredDuringExecution",
+							"description": "Specify in accordance with k8s PodSpec.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution.",
+							"default": [
+
+							],
+							"additionalItems": true,
+							"items": {
+								"$id": "#/properties/affinity/properties/podAntiAffinity/properties/requiredDuringSchedulingIgnoredDuringExecution/items",
+								"type": "object"
+							}
+						},
+						"preferredDuringSchedulingIgnoredDuringExecution": {
+							"$id": "#/properties/affinity/properties/podAntiAffinity/properties/preferredDuringSchedulingIgnoredDuringExecution",
+							"type": ["array","object"],
+							"title": "Pod Anti Affinity PreferredDuringSchedulingIgnoredDuringExecution",
+							"description": "Specify in accordance with k8s PodSpec.podAntiAffinity.preferredDuringSchedulingIgnoredDuringExecution.",
+							"default": [
+
+							],
+							"additionalItems": true,
+							"items": {
+								"$id": "#/properties/affinity/properties/podAntiAffinity/properties/preferredDuringSchedulingIgnoredDuringExecution/items",
+								"type": "object"
+							}
+						}
+					}
+				}
+            }
+        },
+        "topologySpreadConstraints": {
+            "$id": "#/properties/topologySpreadConstraints",
+            "type": ["object", "array"],
+            "title": "Topology spread constraints for pods",
+            "description": "Topology spread constraints to control how Pods are spread across your cluster among failure-domains such as regions, zones, nodes, and other user-defined topology domains.",
+            "default": [
+
+            ],
+            "additionalItems": true,
+            "items": {
+                "$id": "#/properties/topologySpreadConstraints/items",
+                "type": "object"
+            }
+        },
+        "tolerations": {
+            "$id": "#/properties/tolerations",
+            "type": ["object", "array"],
+            "title": "Tolerations for pods",
+            "description": "Tolerations are applied to pods, and allow the pods to schedule onto nodes with matching taints.",
+            "default": [
+
+            ],
+            "additionalItems": true,
+            "items": {
+                "$id": "#/properties/tolerations/items",
+                "type": "object"
+            }
+        },
+        "resources": {
+            "$id": "#/properties/resources",
+            "type": ["object","null"],
+            "title": "Resources",
+            "default": {
+
+            },
+            "required": [
+                
+            ],
+            "properties": {
+                "limits": {
+                    "$id": "#/properties/resources/properties/limits",
+                    "type": "object",
+                    "title": "Limits",
+                    "default": {
+
+                    },
+                    "required": [
+                        
+                    ],
+                    "properties": {
+                        "cpu": {
+                            "$id": "#/properties/resources/properties/limits/properties/cpu",
+                            "type": "string",
+                            "title": "CPU limit",
+                            "description": "The upper limit of CPU core. Specify integers, fractions (e.g. 0.5), or millicores values(e.g. 100m, where 100m is equivalent to .1 core).",
+                            "default": "4000m"
+                        },
+                        "memory": {
+                            "$id": "#/properties/resources/properties/limits/properties/memory",
+                            "type": "string",
+                            "title": "Memory limit",
+                            "description": "The memory upper limit in bytes. Specify integers with suffixes: E, P, T, G, M, K, or power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki.",
+                            "default": "8Gi"
+                        }
+                    }
+                },
+                "requests": {
+                    "$id": "#/properties/resources/properties/requests",
+                    "type": "object",
+                    "title": "Requests",
+                    "default": {
+
+                    },
+                    "required": [
+                        
+                    ],
+                    "properties": {
+                        "cpu": {
+                            "$id": "#/properties/resources/properties/requests/properties/cpu",
+                            "type": "string",
+                            "title": "CPU request",
+                            "description": "The minimum required CPU core. Specify integers, fractions (e.g. 0.5), or millicore values(e.g. 100m, where 100m is equivalent to .1 core).",
+                            "default": "2000m"
+                        },
+                        "memory": {
+                            "$id": "#/properties/resources/properties/requests/properties/memory",
+                            "type": "string",
+                            "title": "Memory request",
+                            "description": "The minimum memory in bytes. Specify integers with one of these suffixes: E, P, T, G, M, K, or power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki.",
+                            "default": "4Gi"
+                        }
+                    }
+                }
+            }
+        },
+        "autoscaling": {
+            "$id": "#/properties/autoscaling",
+            "type": "object",
+            "title": "Autoscaling",
+            "default": {
+
+            },
+            "required": [
+                "enabled",
+                "minReplicas",
+                "maxReplicas",
+                "targetCPUUtilizationPercentage"
+            ],
+            "properties": {
+                "enabled": {
+                    "$id": "#/properties/autoscaling/properties/enabled",
+                    "type": "boolean",
+                    "title": "Enable Automatic Scaling",
+                    "description": "Specifies whether a horizontal pod autoscaler (HPA) is deployed. Note that enabling this field disables the Number of replicas field.",
+                    "default": false
+                },
+                "minReplicas": {
+                    "$id": "#/properties/autoscaling/properties/minReplicas",
+                    "type": "integer",
+                    "title": "Minimum Number of Replicas",
+                    "description": "Lower limit for the number of pods that can be set by the autoscaler.",
+                    "default": 1
+                },
+                "maxReplicas": {
+                    "$id": "#/properties/autoscaling/properties/maxReplicas",
+                    "type": "integer",
+                    "title": "Maximum Number of Replicas",
+                    "description": "Upper limit for the number of pods that can be set by the autoscaler.  Cannot be lower than the minimum number of replicas.",
+                    "default": 2
+                },
+                "targetCPUUtilizationPercentage": {
+                    "$id": "#/properties/autoscaling/properties/targetCPUUtilizationPercentage",
+                    "type": "integer",
+                    "title": "Target CPU Utilization Percentage",
+                    "description": "Target average CPU utilization (represented as a percentage of requested CPU) over all the pods.",
+                    "default": 60
+                }
+            }
+        },
+		"env": {
+			"$id": "#/properties/env",
+			"type": "object",
+			"title": "Environment Variables",
+			"description": "Configure environment variables",
+			"default": {
+
+			},
+			"required": [],
+			"properties": {}
+			}
+		},
+        "application": {
+            "$id": "#properties/application", 
+            "title": "Application", 
+            "type": "object",
+            "required": [
+                "type",
+                "properties"
+            ],
+            "properties": {
+                "type": {
+                    "$id": "#properties/application/type", 
+                    "title": "Type", 
+                    "type": "string",
+                    "default": "",
+                    "examples": [
+                        "object"
+                    ],
+                    "pattern": "^.*$"
+                },
+                "properties": {
+                    "$id": "#properties/application/properties", 
+                    "title": "Properties", 
+                    "type": "object",
+                    "required": [
+                        "jvmOptions",
+                        "logging",
+                        "server",
+                        "spring"
+                    ],
+                    "properties": {
+                        "jvmOptions": {
+                            "$id": "#properties/application/properties/jvmOptions", 
+                            "title": "Jvmoptions", 
+                            "type": "object",
+                            "required": [
+                                "type"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/application/properties/jvmOptions/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "null"
+                                    ],
+                                    "pattern": "^.*$"
+                                }
+                            }
+                        },
+                        "logging": {
+                            "$id": "#properties/application/properties/logging", 
+                            "title": "Logging", 
+                            "type": "object",
+                            "required": [
+                                "type",
+                                "properties"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/application/properties/logging/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "object"
+                                    ],
+                                    "pattern": "^.*$"
+                                },
+                                "properties": {
+                                    "$id": "#properties/application/properties/logging/properties", 
+                                    "title": "Properties", 
+                                    "type": "object",
+                                    "required": [
+                                        "level",
+                                        "numberOfFiles",
+                                        "rolloverSize"
+                                    ],
+                                    "properties": {
+                                        "level": {
+                                            "$id": "#properties/application/properties/logging/properties/level", 
+                                            "title": "Level", 
+                                            "type": "object",
+                                            "required": [
+                                                "type"
+                                            ],
+                                            "properties": {
+                                                "type": {
+                                                    "$id": "#properties/application/properties/logging/properties/level/type", 
+                                                    "title": "Type", 
+                                                    "type": "string",
+                                                    "default": "",
+                                                    "examples": [
+                                                        "string"
+                                                    ],
+                                                    "pattern": "^.*$"
+                                                }
+                                            }
+                                        },
+                                        "numberOfFiles": {
+                                            "$id": "#properties/application/properties/logging/properties/numberOfFiles", 
+                                            "title": "Numberoffiles", 
+                                            "type": "object",
+                                            "required": [
+                                                "type"
+                                            ],
+                                            "properties": {
+                                                "type": {
+                                                    "$id": "#properties/application/properties/logging/properties/numberOfFiles/type", 
+                                                    "title": "Type", 
+                                                    "type": "string",
+                                                    "default": "",
+                                                    "examples": [
+                                                        "integer"
+                                                    ],
+                                                    "pattern": "^.*$"
+                                                }
+                                            }
+                                        },
+                                        "rolloverSize": {
+                                            "$id": "#properties/application/properties/logging/properties/rolloverSize", 
+                                            "title": "Rolloversize", 
+                                            "type": "object",
+                                            "required": [
+                                                "type"
+                                            ],
+                                            "properties": {
+                                                "type": {
+                                                    "$id": "#properties/application/properties/logging/properties/rolloverSize/type", 
+                                                    "title": "Type", 
+                                                    "type": "string",
+                                                    "default": "",
+                                                    "examples": [
+                                                        "string"
+                                                    ],
+                                                    "pattern": "^.*$"
+                                                }
+                                            }
+                                        }
+
+                                    }
+                                }
+
+                            }
+                        },
+                        "server": {
+                            "$id": "#properties/application/properties/server", 
+                            "title": "Server", 
+                            "type": "object",
+                            "required": [
+                                "type",
+                                "properties"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/application/properties/server/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "object"
+                                    ],
+                                    "pattern": "^.*$"
+                                },
+                                "properties": {
+                                    "$id": "#properties/application/properties/server/properties", 
+                                    "title": "Properties", 
+                                    "type": "object",
+                                    "required": [
+                                        "jetty",
+                                        "port",
+                                        "ssl"
+                                    ],
+                                    "properties": {
+                                        "jetty": {
+                                            "$id": "#properties/application/properties/server/properties/jetty", 
+                                            "title": "Jetty", 
+                                            "type": "object",
+                                            "required": [
+                                                "type",
+                                                "properties"
+                                            ],
+                                            "properties": {
+                                                "type": {
+                                                    "$id": "#properties/application/properties/server/properties/jetty/type", 
+                                                    "title": "Type", 
+                                                    "type": "string",
+                                                    "default": "",
+                                                    "examples": [
+                                                        "object"
+                                                    ],
+                                                    "pattern": "^.*$"
+                                                },
+                                                "properties": {
+                                                    "$id": "#properties/application/properties/server/properties/jetty/properties", 
+                                                    "title": "Properties", 
+                                                    "type": "object",
+                                                    "required": [
+                                                        "acceptors",
+                                                        "maxHttpPostSize",
+                                                        "selectors"
+                                                    ],
+                                                    "properties": {
+                                                        "acceptors": {
+                                                            "$id": "#properties/application/properties/server/properties/jetty/properties/acceptors", 
+                                                            "title": "Acceptors", 
+                                                            "type": "object",
+                                                            "required": [
+                                                                "type"
+                                                            ],
+                                                            "properties": {
+                                                                "type": {
+                                                                    "$id": "#properties/application/properties/server/properties/jetty/properties/acceptors/type", 
+                                                                    "title": "Type", 
+                                                                    "type": "string",
+                                                                    "default": "",
+                                                                    "examples": [
+                                                                        "integer"
+                                                                    ],
+                                                                    "pattern": "^.*$"
+                                                                }
+                                                            }
+                                                        },
+                                                        "maxHttpPostSize": {
+                                                            "$id": "#properties/application/properties/server/properties/jetty/properties/maxHttpPostSize", 
+                                                            "title": "Maxhttppostsize", 
+                                                            "type": "object",
+                                                            "required": [
+                                                                "type"
+                                                            ],
+                                                            "properties": {
+                                                                "type": {
+                                                                    "$id": "#properties/application/properties/server/properties/jetty/properties/maxHttpPostSize/type", 
+                                                                    "title": "Type", 
+                                                                    "type": "string",
+                                                                    "default": "",
+                                                                    "examples": [
+                                                                        "integer"
+                                                                    ],
+                                                                    "pattern": "^.*$"
+                                                                }
+                                                            }
+                                                        },
+                                                        "selectors": {
+                                                            "$id": "#properties/application/properties/server/properties/jetty/properties/selectors", 
+                                                            "title": "Selectors", 
+                                                            "type": "object",
+                                                            "required": [
+                                                                "type"
+                                                            ],
+                                                            "properties": {
+                                                                "type": {
+                                                                    "$id": "#properties/application/properties/server/properties/jetty/properties/selectors/type", 
+                                                                    "title": "Type", 
+                                                                    "type": "string",
+                                                                    "default": "",
+                                                                    "examples": [
+                                                                        "integer"
+                                                                    ],
+                                                                    "pattern": "^.*$"
+                                                                }
+                                                            }
+                                                        }
+
+                                                    }
+                                                }
+
+                                            }
+                                        },
+                                        "port": {
+                                            "$id": "#properties/application/properties/server/properties/port", 
+                                            "title": "Port", 
+                                            "type": "object",
+                                            "required": [
+                                                "type"
+                                            ],
+                                            "properties": {
+                                                "type": {
+                                                    "$id": "#properties/application/properties/server/properties/port/type", 
+                                                    "title": "Type", 
+                                                    "type": "string",
+                                                    "default": "",
+                                                    "examples": [
+                                                        "integer"
+                                                    ],
+                                                    "pattern": "^.*$"
+                                                }
+                                            }
+                                        },
+                                        "ssl": {
+                                            "$id": "#properties/application/properties/server/properties/ssl", 
+                                            "title": "Ssl", 
+                                            "type": "object",
+                                            "required": [
+                                                "type",
+                                                "properties"
+                                            ],
+                                            "properties": {
+                                                "type": {
+                                                    "$id": "#properties/application/properties/server/properties/ssl/type", 
+                                                    "title": "Type", 
+                                                    "type": "string",
+                                                    "default": "",
+                                                    "examples": [
+                                                        "object"
+                                                    ],
+                                                    "pattern": "^.*$"
+                                                },
+                                                "properties": {
+                                                    "$id": "#properties/application/properties/server/properties/ssl/properties", 
+                                                    "title": "Properties", 
+                                                    "type": "object",
+                                                    "required": [
+                                                        "clientAuth",
+                                                        "enabled",
+                                                        "tlsSecretName",
+                                                        "trustStoreSecretName",
+                                                        "trustStoreType"
+                                                    ],
+                                                    "properties": {
+                                                        "clientAuth": {
+                                                            "$id": "#properties/application/properties/server/properties/ssl/properties/clientAuth", 
+                                                            "title": "Clientauth", 
+                                                            "type": "object",
+                                                            "required": [
+                                                                "type"
+                                                            ],
+                                                            "properties": {
+                                                                "type": {
+                                                                    "$id": "#properties/application/properties/server/properties/ssl/properties/clientAuth/type", 
+                                                                    "title": "Type", 
+                                                                    "type": "string",
+                                                                    "default": "",
+                                                                    "examples": [
+                                                                        "string"
+                                                                    ],
+                                                                    "pattern": "^.*$"
+                                                                }
+                                                            }
+                                                        },
+                                                        "enabled": {
+                                                            "$id": "#properties/application/properties/server/properties/ssl/properties/enabled", 
+                                                            "title": "Enabled", 
+                                                            "type": "object",
+                                                            "required": [
+                                                                "type"
+                                                            ],
+                                                            "properties": {
+                                                                "type": {
+                                                                    "$id": "#properties/application/properties/server/properties/ssl/properties/enabled/type", 
+                                                                    "title": "Type", 
+                                                                    "type": "string",
+                                                                    "default": "",
+                                                                    "examples": [
+                                                                        "boolean"
+                                                                    ],
+                                                                    "pattern": "^.*$"
+                                                                }
+                                                            }
+                                                        },
+                                                        "tlsSecretName": {
+                                                            "$id": "#properties/application/properties/server/properties/ssl/properties/tlsSecretName", 
+                                                            "title": "Tlssecretname", 
+                                                            "type": "object",
+                                                            "required": [
+                                                                "type"
+                                                            ],
+                                                            "properties": {
+                                                                "type": {
+                                                                    "$id": "#properties/application/properties/server/properties/ssl/properties/tlsSecretName/type", 
+                                                                    "title": "Type", 
+                                                                    "type": "string",
+                                                                    "default": "",
+                                                                    "examples": [
+                                                                        "string"
+                                                                    ],
+                                                                    "pattern": "^.*$"
+                                                                }
+                                                            }
+                                                        },
+                                                        "trustStoreSecretName": {
+                                                            "$id": "#properties/application/properties/server/properties/ssl/properties/trustStoreSecretName", 
+                                                            "title": "Truststoresecretname", 
+                                                            "type": "object",
+                                                            "required": [
+                                                                "type"
+                                                            ],
+                                                            "properties": {
+                                                                "type": {
+                                                                    "$id": "#properties/application/properties/server/properties/ssl/properties/trustStoreSecretName/type", 
+                                                                    "title": "Type", 
+                                                                    "type": "string",
+                                                                    "default": "",
+                                                                    "examples": [
+                                                                        "string"
+                                                                    ],
+                                                                    "pattern": "^.*$"
+                                                                }
+                                                            }
+                                                        },
+                                                        "trustStoreType": {
+                                                            "$id": "#properties/application/properties/server/properties/ssl/properties/trustStoreType", 
+                                                            "title": "Truststoretype", 
+                                                            "type": "object",
+                                                            "required": [
+                                                                "type"
+                                                            ],
+                                                            "properties": {
+                                                                "type": {
+                                                                    "$id": "#properties/application/properties/server/properties/ssl/properties/trustStoreType/type", 
+                                                                    "title": "Type", 
+                                                                    "type": "string",
+                                                                    "default": "",
+                                                                    "examples": [
+                                                                        "string"
+                                                                    ],
+                                                                    "pattern": "^.*$"
+                                                                }
+                                                            }
+                                                        }
+
+                                                    }
+                                                }
+
+                                            }
+                                        }
+
+                                    }
+                                }
+
+                            }
+                        },
+                        "spring": {
+                            "$id": "#properties/application/properties/spring", 
+                            "title": "Spring", 
+                            "type": "object",
+                            "required": [
+                                "type",
+                                "properties"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/application/properties/spring/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "object"
+                                    ],
+                                    "pattern": "^.*$"
+                                },
+                                "properties": {
+                                    "$id": "#properties/application/properties/spring/properties", 
+                                    "title": "Properties", 
+                                    "type": "object",
+                                    "required": [
+                                        "servlet"
+                                    ],
+                                    "properties": {
+                                        "servlet": {
+                                            "$id": "#properties/application/properties/spring/properties/servlet", 
+                                            "title": "Servlet", 
+                                            "type": "object",
+                                            "required": [
+                                                "type",
+                                                "properties"
+                                            ],
+                                            "properties": {
+                                                "type": {
+                                                    "$id": "#properties/application/properties/spring/properties/servlet/type", 
+                                                    "title": "Type", 
+                                                    "type": "string",
+                                                    "default": "",
+                                                    "examples": [
+                                                        "object"
+                                                    ],
+                                                    "pattern": "^.*$"
+                                                },
+                                                "properties": {
+                                                    "$id": "#properties/application/properties/spring/properties/servlet/properties", 
+                                                    "title": "Properties", 
+                                                    "type": "object",
+                                                    "required": [
+                                                        "multipartMaxFileSize",
+                                                        "multipartMaxRequestSize"
+                                                    ],
+                                                    "properties": {
+                                                        "multipartMaxFileSize": {
+                                                            "$id": "#properties/application/properties/spring/properties/servlet/properties/multipartMaxFileSize", 
+                                                            "title": "Multipartmaxfilesize", 
+                                                            "type": "object",
+                                                            "required": [
+                                                                "type"
+                                                            ],
+                                                            "properties": {
+                                                                "type": {
+                                                                    "$id": "#properties/application/properties/spring/properties/servlet/properties/multipartMaxFileSize/type", 
+                                                                    "title": "Type", 
+                                                                    "type": "string",
+                                                                    "default": "",
+                                                                    "examples": [
+                                                                        "string"
+                                                                    ],
+                                                                    "pattern": "^.*$"
+                                                                }
+                                                            }
+                                                        },
+                                                        "multipartMaxRequestSize": {
+                                                            "$id": "#properties/application/properties/spring/properties/servlet/properties/multipartMaxRequestSize", 
+                                                            "title": "Multipartmaxrequestsize", 
+                                                            "type": "object",
+                                                            "required": [
+                                                                "type"
+                                                            ],
+                                                            "properties": {
+                                                                "type": {
+                                                                    "$id": "#properties/application/properties/spring/properties/servlet/properties/multipartMaxRequestSize/type", 
+                                                                    "title": "Type", 
+                                                                    "type": "string",
+                                                                    "default": "",
+                                                                    "examples": [
+                                                                        "string"
+                                                                    ],
+                                                                    "pattern": "^.*$"
+                                                                }
+                                                            }
+                                                        }
+
+                                                    }
+                                                }
+
+                                            }
+                                        }
+
+                                    }
+                                }
+
+                            }
+                        }
+
+                    }
+                }
+
+            }
+        },
+        "objectstore": {
+            "$id": "#properties/objectstore", 
+            "title": "Objectstore", 
+            "type": "object",
+            "required": [
+                "type",
+                "properties"
+            ],
+            "properties": {
+                "type": {
+                    "$id": "#properties/objectstore/type", 
+                    "title": "Type", 
+                    "type": "string",
+                    "default": "",
+                    "examples": [
+                        "object"
+                    ],
+                    "pattern": "^.*$"
+                },
+                "properties": {
+                    "$id": "#properties/objectstore/properties", 
+                    "title": "Properties", 
+                    "type": "object",
+                    "required": [
+                        "accountName",
+                        "classname",
+                        "connectionTimeout",
+                        "endpoint",
+                        "filePartSize",
+                        "filePrefix",
+                        "fileSuffix",
+                        "name",
+                        "namespace",
+                        "partBufferSize",
+                        "poolSizeTransferMgr",
+                        "port",
+                        "proxyCredentialRequired",
+                        "proxyHost",
+                        "proxyPasswordSecretName",
+                        "proxyPort",
+                        "proxyRequired",
+                        "proxyUsername",
+                        "readTimeout",
+                        "region",
+                        "secretName",
+                        "serverSideEncryption",
+                        "sslEnabled",
+                        "useKeysFromSecrets"
+                    ],
+                    "properties": {
+                        "accountName": {
+                            "$id": "#properties/objectstore/properties/accountName", 
+                            "title": "Accountname", 
+                            "type": "object",
+                            "required": [
+                                "type"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/objectstore/properties/accountName/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "null"
+                                    ],
+                                    "pattern": "^.*$"
+                                }
+                            }
+                        },
+                        "classname": {
+                            "$id": "#properties/objectstore/properties/classname", 
+                            "title": "Classname", 
+                            "type": "object",
+                            "required": [
+                                "type"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/objectstore/properties/classname/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "string"
+                                    ],
+                                    "pattern": "^.*$"
+                                }
+                            }
+                        },
+                        "connectionTimeout": {
+                            "$id": "#properties/objectstore/properties/connectionTimeout", 
+                            "title": "Connectiontimeout", 
+                            "type": "object",
+                            "required": [
+                                "type"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/objectstore/properties/connectionTimeout/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "integer"
+                                    ],
+                                    "pattern": "^.*$"
+                                }
+                            }
+                        },
+                        "endpoint": {
+                            "$id": "#properties/objectstore/properties/endpoint", 
+                            "title": "Endpoint", 
+                            "type": "object",
+                            "required": [
+                                "type"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/objectstore/properties/endpoint/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "string"
+                                    ],
+                                    "pattern": "^.*$"
+                                }
+                            }
+                        },
+                        "filePartSize": {
+                            "$id": "#properties/objectstore/properties/filePartSize", 
+                            "title": "Filepartsize", 
+                            "type": "object",
+                            "required": [
+                                "type"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/objectstore/properties/filePartSize/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "integer"
+                                    ],
+                                    "pattern": "^.*$"
+                                }
+                            }
+                        },
+                        "filePrefix": {
+                            "$id": "#properties/objectstore/properties/filePrefix", 
+                            "title": "Fileprefix", 
+                            "type": "object",
+                            "required": [
+                                "type"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/objectstore/properties/filePrefix/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "string"
+                                    ],
+                                    "pattern": "^.*$"
+                                }
+                            }
+                        },
+                        "fileSuffix": {
+                            "$id": "#properties/objectstore/properties/fileSuffix", 
+                            "title": "Filesuffix", 
+                            "type": "object",
+                            "required": [
+                                "type"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/objectstore/properties/fileSuffix/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "string"
+                                    ],
+                                    "pattern": "^.*$"
+                                }
+                            }
+                        },
+                        "name": {
+                            "$id": "#properties/objectstore/properties/name", 
+                            "title": "Name", 
+                            "type": "object",
+                            "required": [
+                                "type"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/objectstore/properties/name/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "string"
+                                    ],
+                                    "pattern": "^.*$"
+                                }
+                            }
+                        },
+                        "namespace": {
+                            "$id": "#properties/objectstore/properties/namespace", 
+                            "title": "Namespace", 
+                            "type": "object",
+                            "required": [
+                                "type"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/objectstore/properties/namespace/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "string"
+                                    ],
+                                    "pattern": "^.*$"
+                                }
+                            }
+                        },
+                        "partBufferSize": {
+                            "$id": "#properties/objectstore/properties/partBufferSize", 
+                            "title": "Partbuffersize", 
+                            "type": "object",
+                            "required": [
+                                "type"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/objectstore/properties/partBufferSize/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "integer"
+                                    ],
+                                    "pattern": "^.*$"
+                                }
+                            }
+                        },
+                        "poolSizeTransferMgr": {
+                            "$id": "#properties/objectstore/properties/poolSizeTransferMgr", 
+                            "title": "Poolsizetransfermgr", 
+                            "type": "object",
+                            "required": [
+                                "type"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/objectstore/properties/poolSizeTransferMgr/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "integer"
+                                    ],
+                                    "pattern": "^.*$"
+                                }
+                            }
+                        },
+                        "port": {
+                            "$id": "#properties/objectstore/properties/port", 
+                            "title": "Port", 
+                            "type": "object",
+                            "required": [
+                                "type"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/objectstore/properties/port/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "integer"
+                                    ],
+                                    "pattern": "^.*$"
+                                }
+                            }
+                        },
+                        "proxyCredentialRequired": {
+                            "$id": "#properties/objectstore/properties/proxyCredentialRequired", 
+                            "title": "Proxycredentialrequired", 
+                            "type": "object",
+                            "required": [
+                                "type"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/objectstore/properties/proxyCredentialRequired/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "boolean"
+                                    ],
+                                    "pattern": "^.*$"
+                                }
+                            }
+                        },
+                        "proxyHost": {
+                            "$id": "#properties/objectstore/properties/proxyHost", 
+                            "title": "Proxyhost", 
+                            "type": "object",
+                            "required": [
+                                "type"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/objectstore/properties/proxyHost/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "null"
+                                    ],
+                                    "pattern": "^.*$"
+                                }
+                            }
+                        },
+                        "proxyPasswordSecretName": {
+                            "$id": "#properties/objectstore/properties/proxyPasswordSecretName", 
+                            "title": "Proxypasswordsecretname", 
+                            "type": "object",
+                            "required": [
+                                "type"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/objectstore/properties/proxyPasswordSecretName/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "null"
+                                    ],
+                                    "pattern": "^.*$"
+                                }
+                            }
+                        },
+                        "proxyPort": {
+                            "$id": "#properties/objectstore/properties/proxyPort", 
+                            "title": "Proxyport", 
+                            "type": "object",
+                            "required": [
+                                "type"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/objectstore/properties/proxyPort/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "integer"
+                                    ],
+                                    "pattern": "^.*$"
+                                }
+                            }
+                        },
+                        "proxyRequired": {
+                            "$id": "#properties/objectstore/properties/proxyRequired", 
+                            "title": "Proxyrequired", 
+                            "type": "object",
+                            "required": [
+                                "type"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/objectstore/properties/proxyRequired/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "boolean"
+                                    ],
+                                    "pattern": "^.*$"
+                                }
+                            }
+                        },
+                        "proxyUsername": {
+                            "$id": "#properties/objectstore/properties/proxyUsername", 
+                            "title": "Proxyusername", 
+                            "type": "object",
+                            "required": [
+                                "type"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/objectstore/properties/proxyUsername/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "null"
+                                    ],
+                                    "pattern": "^.*$"
+                                }
+                            }
+                        },
+                        "readTimeout": {
+                            "$id": "#properties/objectstore/properties/readTimeout", 
+                            "title": "Readtimeout", 
+                            "type": "object",
+                            "required": [
+                                "type"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/objectstore/properties/readTimeout/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "integer"
+                                    ],
+                                    "pattern": "^.*$"
+                                }
+                            }
+                        },
+                        "region": {
+                            "$id": "#properties/objectstore/properties/region", 
+                            "title": "Region", 
+                            "type": "object",
+                            "required": [
+                                "type"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/objectstore/properties/region/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "string"
+                                    ],
+                                    "pattern": "^.*$"
+                                }
+                            }
+                        },
+                        "secretName": {
+                            "$id": "#properties/objectstore/properties/secretName", 
+                            "title": "Secretname", 
+                            "type": "object",
+                            "required": [
+                                "type"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/objectstore/properties/secretName/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "string"
+                                    ],
+                                    "pattern": "^.*$"
+                                }
+                            }
+                        },
+                        "serverSideEncryption": {
+                            "$id": "#properties/objectstore/properties/serverSideEncryption", 
+                            "title": "Serversideencryption", 
+                            "type": "object",
+                            "required": [
+                                "type"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/objectstore/properties/serverSideEncryption/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "boolean"
+                                    ],
+                                    "pattern": "^.*$"
+                                }
+                            }
+                        },
+                        "sslEnabled": {
+                            "$id": "#properties/objectstore/properties/sslEnabled", 
+                            "title": "Sslenabled", 
+                            "type": "object",
+                            "required": [
+                                "type"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/objectstore/properties/sslEnabled/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "boolean"
+                                    ],
+                                    "pattern": "^.*$"
+                                }
+                            }
+                        },
+                        "useKeysFromSecrets": {
+                            "$id": "#properties/objectstore/properties/useKeysFromSecrets", 
+                            "title": "Usekeysfromsecrets", 
+                            "type": "object",
+                            "required": [
+                                "type"
+                            ],
+                            "properties": {
+                                "type": {
+                                    "$id": "#properties/objectstore/properties/useKeysFromSecrets/type", 
+                                    "title": "Type", 
+                                    "type": "string",
+                                    "default": "",
+                                    "examples": [
+                                        "boolean"
+                                    ],
+                                    "pattern": "^.*$"
+                                }
+                            }
+                        }
+
+                    }
+                }
+
+            }
+        },
+		"test": {
+			"$id": "#/properties/test",
+			"type": "object",
+			"title": "Test configuration",
+			"description": "Parameters to configure the tests.",
+			"default": {
+
+			},
+			"required": [],
+			"properties": {
+				"image": {
+					"$id": "#/properties/test/properties/image",
+					"type": "object",
+					"title": "Image",
+					"default": {
+
+					},
+					"required": [
+						"repository",
+						"name",
+						"tag",
+						"pullPolicy"
+					],
+					"properties": {
+						"repository": {
+							"$id": "#/properties/test/properties/image/properties/repository",
+							"type": "string",
+							"title": "Test docker image repository",
+							"description": "Docker image repository for test image",
+							"default": "cp.icr.io/cp"
+						},
+						"name": {
+							"$id": "#/properties/test/properties/image/properties/name",
+							"type": "string",
+							"title": "Test docker image name",
+							"description": "Docker image name for test image.",
+							"default": "opencontent-common-utils"
+						},
+						"tag": {
+							"$id": "#/properties/test/properties/image/properties/tag",
+							"type": "string",
+							"title": "test image tag",
+							"description": "Test docker image tag.",
+							"default": "1.1.60"
+						},
+						"digest": {
+							"$id": "#/properties/test/properties/image/properties/digest",
+							"type": [
+								"string",
+								"null"
+							],
+							"title": "Image digest for test image",
+							"description": "A digest is a hash of a Docker image supported by the Docker v2 registry format.",
+							"default": null
+						},
+						"pullPolicy": {
+							"$id": "#/properties/test/properties/image/properties/pullPolicy",
+							"type": "string",
+							"title": "Image pull policy",
+							"description": "Image pull policy for the docker images.",
+							"default": "IfNotPresent"
+						}
+					}
+				}
+			}
+		}
+}

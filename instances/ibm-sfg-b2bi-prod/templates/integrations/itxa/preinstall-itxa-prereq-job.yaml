@@ -1,0 +1,64 @@
+# (C) Copyright 2019-2022 Syncsort Incorporated. All rights reserved.
+
+{{- if (.Values.integrations.itxaIntegration.enabled) }}
+{{ include "sch.config.init" (list . "b2bi.sch.chart.config.values") }}
+
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "sch.names.fullCompName" (list . .sch.chart.integrations.itxa.prereq.job.name) | quote }}
+  labels:
+{{ include "sch.metadata.labels.standard" (list . .sch.chart.integrations.itxa.prereq.job.name) | indent 4 }}
+  annotations:
+    "helm.sh/hook": "pre-install, pre-upgrade"
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": "hook-succeeded, before-hook-creation"
+spec:
+  backoffLimit: 0
+  template:
+    metadata:
+      name: {{ include "sch.names.fullCompName" (list . .sch.chart.integrations.itxa.prereq.job.name) | quote }}
+      labels:
+{{ include "sch.metadata.labels.standard" (list . .sch.chart.integrations.itxa.prereq.job.name) | indent 8 }}
+      annotations:
+{{- include "sch.metadata.annotations.metering" (list . .sch.chart.metering .sch.chart.nonMetering.nonChargeableProductMetric nil "preinstall") | indent 8 }}
+    spec:
+      serviceAccountName: {{ .Values.serviceAccount.name  | quote }}
+      hostNetwork: false
+      hostPID: false
+      hostIPC: false
+      securityContext:
+{{ include "sch.security.securityContext" (list . .sch.chart.podSecurityContext) | indent 8 }}
+      containers:
+      - name: itx-prereq
+        {{- if .Values.test.image.digest }}
+        image:  "{{ .Values.test.image.repository }}/{{ .Values.test.image.name }}@{{ .Values.test.image.digest }}"
+        {{- else }}
+        image:  "{{ .Values.test.image.repository }}/{{ .Values.test.image.name }}:{{ .Values.test.image.tag }}"
+        {{- end }}
+        imagePullPolicy:  "{{ .Values.test.image.pullPolicy }}"
+        securityContext:
+{{ include "sch.security.securityContext" (list . .sch.chart.containerSecurityContext) | indent 10 }}
+        command:
+        - "/bin/bash"
+        - -c
+        - |
+          echo "starting itxa pre-req checks..."
+          echo "release namespace - {{ .Release.Namespace }}"
+          if [[ ! $(kubectl get configmap -n {{ .Release.Namespace }} {{ .sch.chart.integrations.itxa.prereq.configmap.name | quote }}) ]] ; then
+             echo "ITXA is not installed. Deploy ITXA helm charts first and then perform B2Bi helm chart install/upgrade."
+             exit 1
+          fi
+        resources:
+          requests:
+            memory: 128Mi
+            cpu: 10m
+            ephemeral-storage: "16Mi"
+          limits:
+            memory: 128Mi
+            cpu: 50m
+            ephemeral-storage: "32Mi"
+      affinity:
+{{- include "b2bi.architectureAffinity" . | indent 8 }}
+      restartPolicy: Never
+{{- end }}

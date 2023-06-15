@@ -1,0 +1,46 @@
+# (C) Copyright 2019-2022 Syncsort Incorporated. All rights reserved.
+
+{{- if (.Values.integrations.itxIntegration.enabled) }}
+{{- include "sch.config.init" (list . "b2bi.sch.chart.config.values") -}}
+
+{{- $itxDataPVCName := .sch.chart.integrations.itx.components.dataPVC.name -}}
+
+{{- $name := include "sch.names.fullCompName" (list . $itxDataPVCName) -}}
+{{- $resourceexist := (empty (lookup "v1" "PersistentVolumeClaim" .Release.Namespace $name)) | ternary "false" "true"  }}
+{{ if and (.Values.integrations.itxIntegration.enabled) (empty .Values.integrations.itxIntegration.dataPVC.preDefinedDataPVCName) (eq $resourceexist "false") }}
+
+# create a persistance volume claim for itx data
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "sch.names.fullCompName" (list . $itxDataPVCName) | quote }}
+  annotations:
+        # This is what defines this resource as a hook.
+        "helm.sh/hook": "pre-install, pre-upgrade"
+        "helm.sh/hook-weight": "1"
+        "helm.sh/hook-delete-policy": "before-hook-creation"
+  labels:
+{{ include "sch.metadata.labels.standard" (list . $itxDataPVCName) | indent 4 }}
+spec:
+  {{- if .Values.integrations.itxIntegration.dataPVC.useDynamicProvisioning }}
+  # if present, use the storageClassName from the values.yaml, else use the
+  # default storageClass setup by kube Administrator
+  # setting storageClassName to nil means use the default storage class
+  storageClassName: {{ default nil .Values.integrations.itxIntegration.dataPVC.storageClassName | quote }}
+  {{- else }}
+  # bind to an existing pv.
+  # setting storageClassName to "" disables dynamic provisioning 
+  storageClassName: {{ default "" .Values.integrations.itxIntegration.dataPVC.storageClassName | quote }}
+  {{- if and (.Values.integrations.itxIntegration.dataPVC.selector) (.Values.integrations.itxIntegration.dataPVC.selector.label) }}
+  # use selectors in the binding process
+  selector:
+    matchExpressions:
+      - {key: {{ .Values.integrations.itxIntegration.dataPVC.selector.label }}, operator: In, values: [{{ .Values.integrations.itxIntegration.dataPVC.selector.value }}]}
+  {{- end }}      
+  {{- end }}
+  accessModes: [ {{ .Values.integrations.itxIntegration.dataPVC.accessMode | quote }} ]
+  resources:
+    requests:
+      storage: {{ .Values.integrations.itxIntegration.dataPVC.size | quote }} 
+{{- end }}
+{{- end }}

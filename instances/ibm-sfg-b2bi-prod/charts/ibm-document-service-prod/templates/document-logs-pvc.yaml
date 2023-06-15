@@ -1,0 +1,38 @@
+# (C) Copyright 2021 Syncsort Incorporated. All rights reserved.
+
+{{- if (.Values.persistence.enabled) -}}
+{{- include "sch.config.init" (list . "documentSvc.sch.chart.config.values") -}}
+{{- $logsPVCName := .sch.chart.components.appLogsPVC.name }}
+{{- $thisPVCName := include "sch.names.fullCompName" (list . $logsPVCName) | quote }}
+{{- $isExisting := lookup "v1" "PersistentVolumeClaim" .Release.Namespace $thisPVCName -}}
+{{- if and (not .Values.logs.enableAppLogOnConsole) (not $isExisting) }}
+# create a persistance volume claim for logs
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "sch.names.fullCompName" (list . $logsPVCName) | quote }}
+  labels:
+{{ include "sch.metadata.labels.standard" (list . $logsPVCName) | indent 4 }}
+spec:
+  {{- if .Values.persistence.useDynamicProvisioning }}
+  # if present, use the storageClassName from the values.yaml, else use the
+  # default storageClass setup by kube Administrator
+  # setting storageClassName to nil means use the default storage class
+  storageClassName: {{ default nil .Values.appLogsPVC.storageClassName | quote }}
+  {{- else }}
+  # bind to an existing pv.
+  # setting storageClassName to "" disables dynamic provisioning 
+  storageClassName: {{ default "" .Values.appLogsPVC.storageClassName | quote }}
+  {{- if .Values.appLogsPVC.selector.label }}
+  # use selectors in the binding process
+  selector:
+    matchExpressions:
+      - {key: {{ .Values.appLogsPVC.selector.label }}, operator: In, values: [{{ .Values.appLogsPVC.selector.value }}]}
+  {{- end }}      
+  {{- end }}
+  accessModes: [ {{ .Values.appLogsPVC.accessMode | quote }} ]
+  resources:
+    requests:
+      storage: {{ .Values.appLogsPVC.size | quote }}
+{{- end }}
+{{- end }}

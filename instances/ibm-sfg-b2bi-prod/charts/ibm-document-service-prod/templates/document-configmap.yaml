@@ -1,0 +1,78 @@
+# (C) Copyright 2021 Syncsort Incorporated. All rights reserved.
+
+{{- include "sch.config.init" (list . "documentSvc.sch.chart.config.values") -}}
+{{- $compName :=  .sch.chart.components.configmap.name }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ include "sch.names.fullCompName" (list . $compName) }}"
+  labels:
+{{ include "sch.metadata.labels.standard" (list . $compName) | indent 4 }}
+data:
+  application.properties: |
+    server.port={{ .Values.application.server.port }}
+    server.servlet.context-path=/b2bi
+    server.jetty.acceptors={{ .Values.application.server.jetty.acceptors }}
+    server.jetty.max-http-post-size={{ .Values.application.server.jetty.maxHttpPostSize }}
+    server.jetty.selectors={{ .Values.application.server.jetty.selectors }}
+    server.error.include-message=always
+    spring.config.import=optional:configtree:/app/secrets/
+    server.ssl.enabled={{ .Values.application.server.ssl.enabled }}
+    server.ssl.key-store-type=PKCS12
+    server.ssl.trust-store-type={{ upper (.Values.application.server.ssl.trustStoreType | default "PKCS12") }}
+    server.ssl.key-alias=ds
+    server.ssl.key-store=file:/app/certstore/keystore/keystore.p12
+    server.ssl.key-store-password=${KEYSTORE_PASSWORD}
+    server.ssl.trust-store=file:/app/certstore/truststore/{{ (ternary "truststore.jks" "truststore.p12" (eq (upper (.Values.application.server.ssl.trustStoreType | default "PKCS12")) "JKS")) }}
+    server.ssl.trust-store-password=${TRUSTSTORE_PASSWORD}
+    {{- if .Values.application.server.ssl.enabled }}
+    server.ssl.client-auth={{ .Values.application.server.ssl.clientAuth }}
+    server.ssl.ciphers={{ .Values.application.server.ssl.ciphers | default .sch.chart.config.ciphers }}
+    {{- end }}
+    spring.servlet.multipart.max-request-size={{ .Values.application.spring.servlet.multipartMaxRequestSize }}
+    spring.servlet.multipart.max-file-size={{ .Values.application.spring.servlet.multipartMaxFileSize }}
+    spring.messages.basename=lang/documentservice_messages
+    springdoc.api-docs.path=/api-docs
+    springdoc.swagger-ui.disable-swagger-default-url=true
+    https.protocols=TLSv1.2
+    spring.main.banner-mode=OFF
+    logging.level.root={{.Values.application.logging.level | default "error"}}
+    logging.level.org.springframework.web={{ .Values.application.logging.level | default "error"}}
+    logging.level.org.springframework.boot={{ .Values.application.logging.level | default "error"}}
+
+  store.properties: |
+    objectstore.name={{ .Values.objectstore.name }}
+    objectstore.classname={{ .Values.objectstore.classname | default "com.precisely.s3sdkapi.S3ObjectStore"}}
+    objectstore.endpoint={{ .Values.objectstore.endpoint }}
+    objectstore.port={{ .Values.objectstore.port}}
+    objectstore.namespace={{ .Values.objectstore.namespace }}
+    objectstore.region={{ .Values.objectstore.region }}
+    objectstore.account_name={{ .Values.objectstore.accountName }}
+    {{- if .Values.objectstore.useKeysFromSecrets }}
+    objectstore.secret_key=file:/app/secrets/objectstore/{{ .Values.objectstore.secretKeyName | default "secret_key" }}
+    objectstore.access_key=file:/app/secrets/objectstore/{{ .Values.objectstore.accessKeyName | default "access_key" }}
+    {{- else }}
+    objectstore.secret_key=
+    objectstore.access_key=
+    {{- end }}
+    objectstore.file_prefix={{ .Values.objectstore.filePrefix | default "doc" }}
+    objectstore.file_suffix={{ .Values.objectstore.fileSuffix | default "files" }}
+    objectstore.file_part_size={{ int (.Values.objectstore.filePartSize | default 104857600) }}
+    objectstore.part_buffer_size={{ int (.Values.objectstore.partBufferSize | default 10240) }}
+    objectstore.server_side_encryption={{ .Values.objectstore.serverSideEncryption | default false }}
+    {{- if .Values.objectstore.proxyRequired }}
+    objectstore.ssl_enabled={{ ternary false true (eq (.Values.objectstore.sslEnabled | toString) "false") }}
+    objectstore.proxy_required={{ .Values.objectstore.proxyRequired | default false }}
+    objectstore.proxy_host={{ .Values.objectstore.proxyHost }}
+    objectstore.proxy_port={{ (.Values.objectstore.proxyPort|int) | default 0 }}
+    objectstore.proxy_credentialsRequired={{ .Values.objectstore.proxyCredentialRequired | default false }}
+    objectstore.proxy_username={{ .Values.objectstore.proxyUsername }}
+    {{- if .Values.objectstore.proxyPasswordSecretName }}
+    objectstore.proxy_password=file:/app/secrets/proxy/{{ .Values.objectstore.proxyPasswordKeyName | default "proxy_password" }}
+    {{- else }}
+    objectstore.proxy_password=
+    {{- end }}
+    {{- end }}
+    objectstore.pool_size_transfer_mgr={{ int (.Values.objectstore.poolSizeTransferMgr | default 150) }}
+    objectstore.connectionTimeout={{ int (.Values.objectstore.connectionTimeout | default 600) }}
+    objectstore.readTimeout={{ int (.Values.objectstore.readTimeout | default 600) }}

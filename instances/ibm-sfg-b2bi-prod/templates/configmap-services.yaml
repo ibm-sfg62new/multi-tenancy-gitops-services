@@ -1,0 +1,52 @@
+# (C) Copyright 2019-2021 Syncsort Incorporated. All rights reserved.
+
+{{- $documentServiceName := "" }}
+{{- if .Values.documentService.enabled }}
+{{- include "sch.config.init" (list . "documentSvc.sch.chart.config.values") }}
+{{- $documentServiceName =  (cat .Release.Name "-" .sch.chart.components.documentSvcApp.name "-" .sch.chart.components.appInstance.name | replace " " "") }}
+{{- end }}
+{{- include "sch.config.init" (list . "b2bi.sch.chart.config.values") }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "sch.names.fullCompName" (list . .sch.chart.components.servicesConfigmap.name) | quote }}
+  annotations:
+        # This is what defines this resource as a hook. Without this line, the
+        # job is considered part of the release.
+        "helm.sh/hook": "pre-install, pre-upgrade"
+        "helm.sh/hook-weight": "0"
+        "helm.sh/hook-delete-policy": "before-hook-creation"	
+  labels:
+{{ include "sch.metadata.labels.standard" (list . .sch.chart.components.servicesConfigmap.name) | indent 4 }}
+data:
+  services.yml.in: |-
+    services: 
+    {{- if .Values.documentService.enabled }}  
+    - name: {{ .sch.chart.components.servicesIntegration.documentServiceName }}
+      connectionPoolConfig:
+        maxTotalConnections: {{ (.Values.documentService.connectionPoolConfig.maxTotalConnections|int) | default 250}}
+        maxConnectionsPerRoute: {{ (.Values.documentService.connectionPoolConfig.maxConnectionsPerRoute|int) | default 100 }}
+        connectTimeout: {{ (.Values.documentService.connectionPoolConfig.connectTimeout|int) | default 10000 }}
+        readTimeout: {{ (.Values.documentService.connectionPoolConfig.readTimeout|int) | default 60000 }}
+        idleTimeout: {{ (.Values.documentService.connectionPoolConfig.idleTimeout|int) | default 60000 }}
+        idleMonitorThread: {{ .Values.documentService.connectionPoolConfig.idleMonitorThread | default true }}
+        waitTimeout: {{ (.Values.documentService.connectionPoolConfig.waitTimeout|int) | default 30000 }}
+        keepAlive: {{ (.Values.documentService.connectionPoolConfig.keepAlive|int) | default 300000 }}
+        retryCount: {{ (.Values.documentService.connectionPoolConfig.retryCount|int) | default 2 }}
+        disableContentCompression: {{ .Values.documentService.connectionPoolConfig.disableContentCompression | default true }}
+      ssl:
+        type: {{ ternary "two-way" "none" .Values.documentService.sslEnabled }}
+        shouldVerifyHostname: false
+        keyStoreType: "PKCS12"
+        keyStorePath: "&SERVER_KEYSTORE_LOCATION;"
+        keyStorePassword: "&APSERVER_PASS;"
+        trustStoreType: "PKCS12"
+        trustStorePath: "&SERVER_TRUSTSTORE_LOCATION;"
+        trustStorePassword: "&APSERVER_PASS;"
+        protocolVersion: "TLSv1.2"
+      nodes: 
+      - host: {{ $documentServiceName | quote }}
+        port: {{ .Values.documentService.service.externalPort }}
+    {{- end }}
+    
+

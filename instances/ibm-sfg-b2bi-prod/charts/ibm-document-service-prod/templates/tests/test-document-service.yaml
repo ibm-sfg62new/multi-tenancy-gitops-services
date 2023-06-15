@@ -1,0 +1,31 @@
+# (C) Copyright 2021 Syncsort Incorporated. All rights reserved.
+
+# Example helm test - verify document server is running (can download index.html)
+{{- include "sch.config.init" (list . "documentSvc.sch.chart.config.values") -}}
+{{- $compName :=  .sch.chart.components.appInstance.name -}}
+{{- $testCompName :=  printf "%s-%s" $compName "test" -}}
+{{- $fullTestCompName := include "sch.names.fullCompName" (list . $testCompName) }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ $fullTestCompName }}"
+  annotations:
+    "helm.sh/hook": test-success
+    "helm.sh/hook-delete-policy": hook-succeeded 
+  labels:
+{{ include "sch.metadata.labels.standard" (list . $testCompName) | indent 4 }}
+spec:
+{{- include "sch.security.securityContext" (list . .sch.chart.document.specSecurityContext) | indent 2 }}
+  serviceAccountName: {{ .Values.serviceAccount.name | default "default" }}
+  containers:
+  - name: "{{ $fullTestCompName }}"
+    image: "{{ .Values.test.image.repository }}/{{ .Values.test.image.name }}:{{ .Values.test.image.tag }}"
+    command: ['wget']
+    args:  ['{{ include "sch.names.fullCompName" (list . $compName) }}:{{ .Values.service.externalPort }}']
+    {{- /* please look at _sch-chart-config.tpl for what is being injected here */ -}}
+{{- include "sch.security.securityContext" (list . .sch.chart.document.helmTestPodSecurityContext) | indent 4 }}
+    resources:
+{{ toYaml .Values.resources | indent 6 }}
+  restartPolicy: Never
+  affinity:
+  {{- include "documentSvc.architectureAffinity" . | indent 4 }}

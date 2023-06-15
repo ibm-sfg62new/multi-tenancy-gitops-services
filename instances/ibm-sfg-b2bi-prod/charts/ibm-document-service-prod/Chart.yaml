@@ -1,0 +1,31 @@
+apiVersion: v2
+appVersion: 1.0.0
+dependencies:
+- alias: sch
+  name: ibm-sch
+  repository: '@sch'
+  version: ^1.2.16
+description: 'IBM <product> provides ...  (Note: first 97 chars are displayed in OCP
+  Developer Catalog)    Documentation For additional details regarding install parameters
+  check: http://ibm.biz/<product>-readme.   License By installing this product you
+  accept the license terms http://ibm.biz/<product>-license.'
+home: https://github.com/IBM/charts/blob/master/README.md
+icon: http://raw.githubusercontent.com/IBM/charts/master/logo/icp-logo-box.svg
+keywords:
+- Tech
+- amd64
+- s390x
+- ppc64le
+- reference
+- template
+- Tools
+- Beta
+- Limited
+- Development
+- RHOCP
+- Other
+kubeVersion: '>=1.18.0'
+maintainers:
+- name: IBM
+name: ibm-document-service-prod
+version: 1.0.0
